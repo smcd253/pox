@@ -96,7 +96,6 @@ class Tutorial (object):
     if packet.src not in self.mac_to_port:
         print "Learning that " + str(packet.src) + " is attached at port " + str(packet_in.in_port)
         self.mac_to_port[packet.src] = packet_in.in_port
-    # self.mac_to_port ... <add or update entry>
 
     # if the port associated with the destination MAC of the packet is known:
     if packet.dst in self.mac_to_port:
