@@ -29,6 +29,49 @@ import pox.openflow.libopenflow_01 as of
 
 log = core.getLogger()
 
+
+# switch stuff
+class Switch:
+  """
+  switch object
+  """
+
+  def __init__(self, mac_to_port):
+    self.mac_to_port = mac_to_port
+
+def switch_handler(sw_object, packet, packet_in):
+  if packet.src not in sw_object.mac_to_port:
+        print "Learning that " + str(packet.src) + " is attached at port " + str(packet_in.in_port)
+        sw_object.mac_to_port[packet.src] = packet_in.in_port
+
+  # if the port associated with the destination MAC of the packet is known:
+  if packet.dst in self.mac_to_port:
+    # Send packet out the associated port
+    print str(packet.dst) + " destination known. only send message to it"
+    self.resend_packet(packet_in, sw_object.mac_to_port[packet.dst])
+
+    # Once you have the above working, try pushing a flow entry
+    # instead of resending the packet (comment out the above and
+    # uncomment and complete the below.)
+
+    # log.debug("Installing flow...")
+    # Maybe the log statement should have source/destination/port?
+
+    #msg = of.ofp_flow_mod()
+    #
+    ## Set fields to match received packet
+    #msg.match = of.ofp_match.from_packet(packet)
+    #
+    #< Set other fields of flow_mod (timeouts? buffer_id?) >
+    #
+    #< Add an output action, and send -- similar to resend_packet() >
+
+  else:
+    # Flood the packet out everything but the input port
+    # This part looks familiar, right?
+    print str(packet.dst) + " not known, resend to everybody"
+    self.resend_packet(packet_in, of.OFPP_ALL)
+    
 class Tutorial (object):
   """
   A Tutorial object is created for each switch that connects.
@@ -52,6 +95,11 @@ class Tutorial (object):
     and switches in such a way that your single piece of switch code and router code along with your data structure design
     should work for all the scenarios
     """
+
+    # initialize switch object
+    # corresponds to mac_to_port
+    self.mac_to_port = {}
+    self.switch_object = Switch(self.mac_to_port)
 
   def resend_packet (self, packet_in, out_port):
     """
@@ -92,6 +140,9 @@ class Tutorial (object):
     else: (if it is not switch, it means router. We have only two kinds of devices, one is switch and one is router)
       invoke router_handler and pass the object (i.e., self) and the packet and packet_in
     """
+    switch_handler(self.switch_object, packet, packet_in)
+    # try switch only first
+
 
 
 def launch ():
