@@ -99,6 +99,6 @@ def launch ():
   Starts the component
   """
   def start_switch (event):
-    #log.debug("Controlling %s" % (event.connection,))
+    log.debug("Controlling %s" % (event.connection,))
     Tutorial(event.connection)
   core.openflow.addListenerByName("ConnectionUp", start_switch)
