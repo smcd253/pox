@@ -29,7 +29,7 @@ def switch_handler(sw_object, packet, packet_in):
         sw_object.mac_to_port[packet.src] = packet_in.in_port
 
   # if the port associated with the destination MAC of the packet is known:
-  if packet.dst in self.mac_to_port:
+  if packet.dst in sw_object.mac_to_port:
     # Send packet out the associated port
     print str(packet.dst) + " destination known. only send message to it"
     sw_object.resend_packet(packet_in, sw_object.mac_to_port[packet.dst])
