@@ -22,13 +22,6 @@ log = core.getLogger()
       packet    : The packet that is received from the packet forwarding switch.
       packet_in : The packet_in object that is received from the packet forwarding switch
 """
-class Switch:
-  """
-  switch object
-  """
-
-  def __init__(self, mac_to_port):
-    self.mac_to_port = mac_to_port
 
 def switch_handler(sw_object, packet, packet_in):
   if packet.src not in sw_object.mac_to_port:
@@ -61,4 +54,4 @@ def switch_handler(sw_object, packet, packet_in):
     # Flood the packet out everything but the input port
     # This part looks familiar, right?
     print str(packet.dst) + " not known, resend to everybody"
-    self.resend_packet(packet_in, of.OFPP_ALL)
+    sw_object.resend_packet(packet_in, of.OFPP_ALL)
