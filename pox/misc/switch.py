@@ -31,7 +31,7 @@ def switch_handler(sw_object, packet, packet_in):
   # if the port associated with the destination MAC of the packet is known:
   if packet.dst in sw_object.mac_to_port:
     # Send packet out the associated port
-    print str(packet.dst) + " destination known. only send message to it"
+    print "Destination " + str(packet.dst) + " known. Forward msg to port " + sw_object.mac_to_port[packet.dst] "."
     sw_object.resend_packet(packet_in, sw_object.mac_to_port[packet.dst])
 
     # Once you have the above working, try pushing a flow entry
@@ -53,5 +53,5 @@ def switch_handler(sw_object, packet, packet_in):
   else:
     # Flood the packet out everything but the input port
     # This part looks familiar, right?
-    print str(packet.dst) + " not known, resend to everybody"
+    print str(packet.dst) + " not known, resend to all ports."
     sw_object.resend_packet(packet_in, of.OFPP_ALL)
