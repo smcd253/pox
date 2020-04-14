@@ -31,13 +31,13 @@ def switch_handler(sw_object, packet, packet_in):
   # if the port associated with the destination MAC of the packet is known:
   if packet.dst in sw_object.mac_to_port:
     # Send packet out the associated port
-    print "Destination " + str(packet.dst) + " known. Forward msg to port " + sw_object.mac_to_port[packet.dst] "."
+    print "Destination " + str(packet.dst) + " known. Forward msg to port " + str(sw_object.mac_to_port[packet.dst]) + "."
     sw_object.resend_packet(packet_in, sw_object.mac_to_port[packet.dst])
 
     # Once you have the above working, try pushing a flow entry
     # instead of resending the packet (comment out the above and
     # uncomment and complete the below.)
-
+    print "switch dpid = " + sw_object.dpid
     # log.debug("Installing flow...", )
     # Maybe the log statement should have source/destination/port?
 
