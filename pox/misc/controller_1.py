@@ -24,6 +24,7 @@ import pox.openflow.libopenflow_01 as of
 # from pox.lib.addresses import *
 # from pox.lib.packet.icmp import *
 # from pox.lib.packet.ipv4 import *
+from pox.lib.util import dpid_to_str
 from switch import *
 # from router import *
 
@@ -58,6 +59,8 @@ class Tutorial (object):
     # initialize switch object
     # corresponds to mac_to_port
     self.mac_to_port = {}
+    self.dpid = dpid_to_str(connection.dpid)
+    print("dpid = ", self.dpid)
 
   def resend_packet (self, packet_in, out_port):
     """

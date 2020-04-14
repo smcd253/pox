@@ -38,7 +38,7 @@ def switch_handler(sw_object, packet, packet_in):
     # instead of resending the packet (comment out the above and
     # uncomment and complete the below.)
 
-    # log.debug("Installing flow...")
+    # log.debug("Installing flow...", )
     # Maybe the log statement should have source/destination/port?
 
     #msg = of.ofp_flow_mod()
