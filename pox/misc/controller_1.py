@@ -89,7 +89,7 @@ class Tutorial (object):
       return
 
     packet_in = event.ofp # The actual ofp_packet_in message.
-
+    _port = event.port
     """
     [555 Comments]
     You need to classify a device as either switch or router based on its DPID received in the connection object during
@@ -102,7 +102,7 @@ class Tutorial (object):
       invoke router_handler and pass the object (i.e., self) and the packet and packet_in
     """
     # try switch only first
-    switch_handler(self, packet, packet_in)
+    switch_handler(self, packet, packet_in, _port)
 
 
 

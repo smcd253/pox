@@ -23,7 +23,7 @@ log = core.getLogger()
       packet_in : The packet_in object that is received from the packet forwarding switch
 """
 
-def switch_handler(sw_object, packet, packet_in):
+def switch_handler(sw_object, packet, packet_in, _port):
   if packet.src not in sw_object.mac_to_port:
         print "Learning that " + str(packet.src) + " is attached at port " + str(packet_in.in_port)
         sw_object.mac_to_port[packet.src] = packet_in.in_port
@@ -34,26 +34,26 @@ def switch_handler(sw_object, packet, packet_in):
     print "Destination " + str(packet.dst) + " known. Forward msg to port " + str(sw_object.mac_to_port[packet.dst]) + "."
     # sw_object.resend_packet(packet_in, sw_object.mac_to_port[packet.dst])
 
-    # Once you have the above working, try pushing a flow entry
-    # instead of resending the packet (comment out the above and
-    # uncomment and complete the below.)
-    print "switch dpid = " + sw_object.dpid
-    # log.debug("Installing flow...", )
-    # Maybe the log statement should have source/destination/port?
+    log.debug("Installing flow...", str(sw_object.mac_to_port[packet.dst]) )
 
+    # msg = of.ofp_flow_mod()
+    # msg.match = of.ofp_match.from_packet(packet, sw_object.mac_to_port[packet.dst])
+    # msg.match.dl_dst = packet.dst
+    # # msg.match.dl_type = 0x800
+    # # msg.priority = 42
+    # msg.idle_timeout = 60
+    # msg.hard_timeout = 600
+    # msg.actions.append(of.ofp_action_output(port = sw_object.mac_to_port[packet.dst]))
+    # sw_object.connection.send(msg)
+
+    log.debug("installing flow for %s.%i -> %s.%i" %
+                  (packet.src, _port, packet.dst, sw_object.mac_to_port[packet.dst]))
     msg = of.ofp_flow_mod()
-    #
-    ## Set fields to match received packet
-    msg.match = of.ofp_match.from_packet(packet, packet_in.in_port)
-    msg.match.dl_dst = packet.dst
-    # msg.match.dl_type = 0x800
-    # msg.priority = 42
-    #
-    #< Set other fields of flow_mod (timeouts? buffer_id?) >
-    msg.idle_timeout = 60
-    msg.hard_timeout = 600
-    #< Add an output action, and send -- similar to resend_packet() >
+    msg.match = of.ofp_match.from_packet(packet, sw_object.mac_to_port[packet.dst])
+    msg.idle_timeout = 10
+    msg.hard_timeout = 30
     msg.actions.append(of.ofp_action_output(port = sw_object.mac_to_port[packet.dst]))
+    msg.data = packet_in # 6a
     sw_object.connection.send(msg)
 
   else:
