@@ -44,8 +44,10 @@ def switch_handler(sw_object, packet, packet_in):
     msg = of.ofp_flow_mod()
     #
     ## Set fields to match received packet
-    msg.match = of.ofp_match.from_packet(packet)
+    msg.match = of.ofp_match.from_packet(packet, packet.src)
     msg.match.dl_dst = packet.dst
+    # msg.match.dl_type = 0x800
+    # msg.priority = 42
     #
     #< Set other fields of flow_mod (timeouts? buffer_id?) >
     msg.idle_timeout = 60
