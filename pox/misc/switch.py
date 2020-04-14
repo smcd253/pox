@@ -32,12 +32,6 @@ def switch_handler(sw_object, packet, packet_in, port):
     if time.time() - sw_object.connection.connect_time >= _flood_delay:
       # Only flood if we've been connected for a little while...
 
-      #if sw_object.hold_down_expired is False:
-      #  # Oh yes it is!
-      #  sw_object.hold_down_expired = True
-      #  log.info("%s: Flood hold-down expired -- flooding",
-      #      sw_object.dpid)
-
       if message is not None: log.debug(message)
       #log.debug("%i: flood %s -> %s", event.dpid,packet.src,packet.dst)
       # OFPP_FLOOD is optional; on some switches you may need to change
@@ -62,7 +56,6 @@ def switch_handler(sw_object, packet, packet_in, port):
       msg.match = of.ofp_match.from_packet(packet)
       msg.idle_timeout = duration[0]
       msg.hard_timeout = duration[1]
-      # msg.buffer_id = packet.buffer_id
       sw_object.connection.send(msg)
     elif packet.buffer_id is not None:
       msg = of.ofp_packet_out()
@@ -72,19 +65,13 @@ def switch_handler(sw_object, packet, packet_in, port):
 
   sw_object.mac_to_port[packet.src] = port # 1
 
-  # if not sw_object.transparent: # 2
-  #  if packet.type == packet.LLDP_TYPE or packet.dst.isBridgeFiltered():
-  #    drop() # 2a
-  #    return
-
   if packet.dst.is_multicast:
     flood() # 3a
   else:
     if packet.dst not in sw_object.mac_to_port: # 4
       flood("Port for %s unknown -- flooding" % (packet.dst,)) # 4a
     else:
-      port = sw_object.mac_to_port[packet.dst]
-      if port == port: # 5
+      if port == sw_object.mac_to_port[packet.dst]: # 5
         # 5a
         log.warning("Same port for packet from %s -> %s on %s.%s.  Drop."
             % (packet.src, packet.dst, sw_object.dpid, port))
@@ -92,11 +79,11 @@ def switch_handler(sw_object, packet, packet_in, port):
         return
       # 6
       log.debug("installing flow for %s.%i -> %s.%i" %
-                (packet.src, port, packet.dst, port))
+                (packet.src, port, packet.dst, sw_object.mac_to_port[packet.dst]))
       msg = of.ofp_flow_mod()
-      msg.match = of.ofp_match.from_packet(packet, port)
+      msg.match = of.ofp_match.from_packet(packet, sw_object.mac_to_port[packet.dst])
       msg.idle_timeout = 10
       msg.hard_timeout = 30
-      msg.actions.append(of.ofp_action_output(port = port))
+      msg.actions.append(of.ofp_action_output(port = sw_object.mac_to_port[packet.dst]))
       msg.data = packet # 6a
       sw_object.connection.send(msg)
