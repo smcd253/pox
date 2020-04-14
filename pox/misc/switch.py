@@ -70,7 +70,7 @@ def switch_handler(sw_object, packet, packet_in, port):
       msg.in_port = port
       sw_object.connection.send(msg)
 
-  sw_object.macToPort[packet.src] = port # 1
+  sw_object.mac_to_port[packet.src] = port # 1
 
   if not sw_object.transparent: # 2
     if packet.type == packet.LLDP_TYPE or packet.dst.isBridgeFiltered():
@@ -80,10 +80,10 @@ def switch_handler(sw_object, packet, packet_in, port):
   if packet.dst.is_multicast:
     flood() # 3a
   else:
-    if packet.dst not in sw_object.macToPort: # 4
+    if packet.dst not in sw_object.mac_to_port: # 4
       flood("Port for %s unknown -- flooding" % (packet.dst,)) # 4a
     else:
-      port = sw_object.macToPort[packet.dst]
+      port = sw_object.mac_to_port[packet.dst]
       if port == port: # 5
         # 5a
         log.warning("Same port for packet from %s -> %s on %s.%s.  Drop."
