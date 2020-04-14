@@ -52,7 +52,7 @@ def switch_handler(sw_object, packet, packet_in):
     #< Add an output action, and send -- similar to resend_packet() >
     action = of.ofp_action_output(port = sw_object.mac_to_port[packet.dst])
     msg.actions.append(action)
-    self.connection.send(msg)
+    sw_object.connection.send(msg)
 
   else:
     # Flood the packet out everything but the input port
