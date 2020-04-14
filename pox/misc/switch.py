@@ -25,52 +25,52 @@ log = core.getLogger()
 _flood_delay = 0
 def switch_handler(sw_object, packet, packet_in, port):
 
-  # # floods packet instead of calling resend_packet
-  # def flood (message = None):
-  #   """ Floods the packet """
-  #   msg = of.ofp_packet_out()
-  #   if time.time() - sw_object.connection.connect_time >= _flood_delay:
-  #     # Only flood if we've been connected for a little while...
+  # floods packet instead of calling resend_packet
+  def flood (message = None):
+    """ Floods the packet """
+    msg = of.ofp_packet_out()
+    if time.time() - sw_object.connection.connect_time >= _flood_delay:
+      # Only flood if we've been connected for a little while...
 
-  #     if sw_object.hold_down_expired is False:
-  #       # Oh yes it is!
-  #       sw_object.hold_down_expired = True
-  #       log.info("%s: Flood hold-down expired -- flooding",
-  #           sw_object.dpid)
+      if sw_object.hold_down_expired is False:
+        # Oh yes it is!
+        sw_object.hold_down_expired = True
+        log.info("%s: Flood hold-down expired -- flooding",
+            sw_object.dpid)
 
-  #     if message is not None: log.debug(message)
-  #     #log.debug("%i: flood %s -> %s", event.dpid,packet.src,packet.dst)
-  #     # OFPP_FLOOD is optional; on some switches you may need to change
-  #     # this to OFPP_ALL.
-  #     msg.actions.append(of.ofp_action_output(port = of.OFPP_FLOOD))
-  #   else:
-  #     pass
-  #     #log.info("Holding down flood for %s", dpid_to_str(event.dpid))
-  #   msg.data = packet
-  #   msg.in_port = port
-  #   sw_object.connection.send(msg)
+      if message is not None: log.debug(message)
+      #log.debug("%i: flood %s -> %s", event.dpid,packet.src,packet.dst)
+      # OFPP_FLOOD is optional; on some switches you may need to change
+      # this to OFPP_ALL.
+      msg.actions.append(of.ofp_action_output(port = of.OFPP_FLOOD))
+    else:
+      pass
+      #log.info("Holding down flood for %s", dpid_to_str(event.dpid))
+    msg.data = packet
+    msg.in_port = port
+    sw_object.connection.send(msg)
 
-  # def drop (duration = None):
-  #   """
-  #   Drops this packet and optionally installs a flow to continue
-  #   dropping similar ones for a while
-  #   """
-  #   if duration is not None:
-  #     if not isinstance(duration, tuple):
-  #       duration = (duration,duration)
-  #     msg = of.ofp_flow_mod()
-  #     msg.match = of.ofp_match.from_packet(packet)
-  #     msg.idle_timeout = duration[0]
-  #     msg.hard_timeout = duration[1]
-  #     msg.buffer_id = packet.buffer_id
-  #     sw_object.connection.send(msg)
-  #   elif packet.buffer_id is not None:
-  #     msg = of.ofp_packet_out()
-  #     msg.buffer_id = packet.buffer_id
-  #     msg.in_port = port
-  #     sw_object.connection.send(msg)
+  def drop (duration = None):
+    """
+    Drops this packet and optionally installs a flow to continue
+    dropping similar ones for a while
+    """
+    if duration is not None:
+      if not isinstance(duration, tuple):
+        duration = (duration,duration)
+      msg = of.ofp_flow_mod()
+      msg.match = of.ofp_match.from_packet(packet)
+      msg.idle_timeout = duration[0]
+      msg.hard_timeout = duration[1]
+      msg.buffer_id = packet.buffer_id
+      sw_object.connection.send(msg)
+    elif packet.buffer_id is not None:
+      msg = of.ofp_packet_out()
+      msg.buffer_id = packet.buffer_id
+      msg.in_port = port
+      sw_object.connection.send(msg)
 
-  # sw_object.macToPort[packet.src] = port # 1
+  sw_object.macToPort[packet.src] = port # 1
 
   if not sw_object.transparent: # 2
     if packet.type == packet.LLDP_TYPE or packet.dst.isBridgeFiltered():
