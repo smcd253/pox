@@ -22,42 +22,81 @@ log = core.getLogger()
       packet    : The packet that is received from the packet forwarding switch.
       packet_in : The packet_in object that is received from the packet forwarding switch
 """
+_flood_delay = 0
+def switch_handler(sw_object, packet, packet_in, port):
 
-def switch_handler(sw_object, packet, packet_in, _port):
-  if packet.src not in sw_object.mac_to_port:
-        print "Learning that " + str(packet.src) + " is attached at port " + str(packet_in.in_port)
-        sw_object.mac_to_port[packet.src] = packet_in.in_port
+  # floods packet instead of calling resend_packet
+  def flood (message = None):
+    """ Floods the packet """
+    msg = of.ofp_packet_out()
+    if time.time() - sw_object.connection.connect_time >= _flood_delay:
+      # Only flood if we've been connected for a little while...
 
-  # if the port associated with the destination MAC of the packet is known:
-  if packet.dst in sw_object.mac_to_port:
-    # Send packet out the associated port
-    print "Destination " + str(packet.dst) + " known. Forward msg to port " + str(sw_object.mac_to_port[packet.dst]) + "."
-    # sw_object.resend_packet(packet_in, sw_object.mac_to_port[packet.dst])
+      if sw_object.hold_down_expired is False:
+        # Oh yes it is!
+        sw_object.hold_down_expired = True
+        log.info("%s: Flood hold-down expired -- flooding",
+            sw_object.dpid)
 
-    # log.debug("Installing flow...", str(sw_object.mac_to_port[packet.dst]) )
-
-    # msg = of.ofp_flow_mod()
-    # msg.match = of.ofp_match.from_packet(packet, sw_object.mac_to_port[packet.dst])
-    # msg.match.dl_dst = packet.dst
-    # # msg.match.dl_type = 0x800
-    # # msg.priority = 42
-    # msg.idle_timeout = 60
-    # msg.hard_timeout = 600
-    # msg.actions.append(of.ofp_action_output(port = sw_object.mac_to_port[packet.dst]))
-    # sw_object.connection.send(msg)
-
-    log.debug("installing flow for %s.%i -> %s.%i" %
-                  (packet.src, _port, packet.dst, sw_object.mac_to_port[packet.dst]))
-    msg = of.ofp_flow_mod()
-    msg.match = of.ofp_match.from_packet(packet, sw_object.mac_to_port[packet.dst])
-    msg.idle_timeout = 10
-    msg.hard_timeout = 30
-    msg.actions.append(of.ofp_action_output(port = sw_object.mac_to_port[packet.dst]))
-    msg.data = packet_in # 6a
+      if message is not None: log.debug(message)
+      #log.debug("%i: flood %s -> %s", event.dpid,packet.src,packet.dst)
+      # OFPP_FLOOD is optional; on some switches you may need to change
+      # this to OFPP_ALL.
+      msg.actions.append(of.ofp_action_output(port = of.OFPP_FLOOD))
+    else:
+      pass
+      #log.info("Holding down flood for %s", dpid_to_str(event.dpid))
+    msg.data = packet
+    msg.in_port = port
     sw_object.connection.send(msg)
 
+  def drop (duration = None):
+    """
+    Drops this packet and optionally installs a flow to continue
+    dropping similar ones for a while
+    """
+    if duration is not None:
+      if not isinstance(duration, tuple):
+        duration = (duration,duration)
+      msg = of.ofp_flow_mod()
+      msg.match = of.ofp_match.from_packet(packet)
+      msg.idle_timeout = duration[0]
+      msg.hard_timeout = duration[1]
+      msg.buffer_id = packet.buffer_id
+      sw_object.connection.send(msg)
+    elif packet.buffer_id is not None:
+      msg = of.ofp_packet_out()
+      msg.buffer_id = packet.buffer_id
+      msg.in_port = port
+      sw_object.connection.send(msg)
+
+  sw_object.macToPort[packet.src] = port # 1
+
+  if not sw_object.transparent: # 2
+    if packet.type == packet.LLDP_TYPE or packet.dst.isBridgeFiltered():
+      drop() # 2a
+      return
+
+  if packet.dst.is_multicast:
+    flood() # 3a
   else:
-    # Flood the packet out everything but the input port
-    # This part looks familiar, right?
-    print str(packet.dst) + " not known, resend to all ports."
-    sw_object.resend_packet(packet_in, of.OFPP_ALL)
+    if packet.dst not in sw_object.macToPort: # 4
+      flood("Port for %s unknown -- flooding" % (packet.dst,)) # 4a
+    else:
+      port = sw_object.macToPort[packet.dst]
+      if port == port: # 5
+        # 5a
+        log.warning("Same port for packet from %s -> %s on %s.%s.  Drop."
+            % (packet.src, packet.dst, sw_object.dpid, port))
+        drop(10)
+        return
+      # 6
+      log.debug("installing flow for %s.%i -> %s.%i" %
+                (packet.src, port, packet.dst, port))
+      msg = of.ofp_flow_mod()
+      msg.match = of.ofp_match.from_packet(packet, port)
+      msg.idle_timeout = 10
+      msg.hard_timeout = 30
+      msg.actions.append(of.ofp_action_output(port = port))
+      msg.data = packet # 6a
+      sw_object.connection.send(msg)

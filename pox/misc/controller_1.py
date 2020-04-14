@@ -60,7 +60,6 @@ class Tutorial (object):
     # corresponds to mac_to_port
     self.mac_to_port = {}
     self.dpid = dpid_to_str(connection.dpid)
-    print("dpid = ", self.dpid)
 
   def resend_packet (self, packet_in, out_port):
     """
@@ -89,7 +88,7 @@ class Tutorial (object):
       return
 
     packet_in = event.ofp # The actual ofp_packet_in message.
-    _port = event.port
+    port = event.port
     """
     [555 Comments]
     You need to classify a device as either switch or router based on its DPID received in the connection object during
@@ -102,7 +101,7 @@ class Tutorial (object):
       invoke router_handler and pass the object (i.e., self) and the packet and packet_in
     """
     # try switch only first
-    switch_handler(self, packet, packet_in, _port)
+    switch_handler(self, packet, packet_in, port)
 
 
 
