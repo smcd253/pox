@@ -32,11 +32,11 @@ def switch_handler(sw_object, packet, packet_in, port):
     if time.time() - sw_object.connection.connect_time >= _flood_delay:
       # Only flood if we've been connected for a little while...
 
-      if sw_object.hold_down_expired is False:
-        # Oh yes it is!
-        sw_object.hold_down_expired = True
-        log.info("%s: Flood hold-down expired -- flooding",
-            sw_object.dpid)
+      #if sw_object.hold_down_expired is False:
+      #  # Oh yes it is!
+      #  sw_object.hold_down_expired = True
+      #  log.info("%s: Flood hold-down expired -- flooding",
+      #      sw_object.dpid)
 
       if message is not None: log.debug(message)
       #log.debug("%i: flood %s -> %s", event.dpid,packet.src,packet.dst)
@@ -62,7 +62,7 @@ def switch_handler(sw_object, packet, packet_in, port):
       msg.match = of.ofp_match.from_packet(packet)
       msg.idle_timeout = duration[0]
       msg.hard_timeout = duration[1]
-      msg.buffer_id = packet.buffer_id
+      # msg.buffer_id = packet.buffer_id
       sw_object.connection.send(msg)
     elif packet.buffer_id is not None:
       msg = of.ofp_packet_out()
@@ -72,10 +72,10 @@ def switch_handler(sw_object, packet, packet_in, port):
 
   sw_object.mac_to_port[packet.src] = port # 1
 
-  if not sw_object.transparent: # 2
-    if packet.type == packet.LLDP_TYPE or packet.dst.isBridgeFiltered():
-      drop() # 2a
-      return
+  # if not sw_object.transparent: # 2
+  #  if packet.type == packet.LLDP_TYPE or packet.dst.isBridgeFiltered():
+  #    drop() # 2a
+  #    return
 
   if packet.dst.is_multicast:
     flood() # 3a
