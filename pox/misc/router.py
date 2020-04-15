@@ -63,7 +63,8 @@ def is_in_local_routing_table(dest_subnet, local_routing_table):
   strip_net_addrs = local_routing_table.keys()
   for i in strip_net_addrs:
     i = get_subnet(i)
-    
+    print("routing table entry = " + i)
+  print("dest_subnet = " + dest_subnet)  
   if dest_subnet in strip_net_addrs:
     print("dest_subnet " + dest_subnet + " in routing table")
     return True
@@ -84,7 +85,8 @@ def router_handler(rt_object, packet, packet_in):
 
     # if destination ip (packet.payload.protodst) is on same network and this network 
     # (longest prefix match) --> act like switch
-    if same_subnet(arp_dst_ip, arp_src_ip) and is_in_local_routing_table(get_subnet(arp_dst_ip), rt_object.routing_table_r1):
+    # if same_subnet(arp_dst_ip, arp_src_ip) and is_in_local_routing_table(get_subnet(arp_dst_ip), rt_object.routing_table_r1):
+    if same_subnet(arp_dst_ip, arp_src_ip):
       print("success, call switch_handler()")
       switch_handler(rt_object, packet, packet_in)
 
