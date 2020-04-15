@@ -39,9 +39,7 @@ def switch_handler(sw_object, packet, packet_in):
     msg = of.ofp_flow_mod()
     msg.match = of.ofp_match.from_packet(packet, sw_object.mac_to_port[packet.dst])
     msg.match.dl_dst = packet.dst
-    msg.match.dl_type = 0x800
     msg.actions.append(of.ofp_action_output(port = sw_object.mac_to_port[packet.dst]))
-    msg.data = packet_in
     sw_object.connection.send(msg)
 
   else:
