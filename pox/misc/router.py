@@ -67,7 +67,7 @@ def is_in_local_routing_table(ip, local_routing_table):
     return False
 
 def router_handler(rt_object, packet, packet_in):
-
+  print("dafuq is going on?")
   # if packet is arp
   if not isinstance(packet.next, ipv4):
     print("this is an arp packet")
