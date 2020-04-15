@@ -119,7 +119,7 @@ def router_handler(rt_object, packet, packet_in):
       self.connection.send(msg)
 
   # else --> act like router and respond with arp reply
-  elif isinstance(packet.next, ipv4):
+  # elif isinstance(packet.next, ipv4):
 
   # Step 2: ICMP Request (from source) (if packet is icmp request or reply)
   # if destination ip is in THIS routing table --> make arp request
@@ -127,7 +127,6 @@ def router_handler(rt_object, packet, packet_in):
   # else
     # broadcast arp request
   # else:
-
  
   
   
