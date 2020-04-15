@@ -66,7 +66,7 @@ def is_in_local_routing_table(ip, local_routing_table):
 def router_handler(rt_object, packet, packet_in):
 
   # if packet is arp
-  if not isinstance(pacet.next, ipv4):
+  if not isinstance(packet.next, ipv4):
     # arp request
     arp_dst_ip = str(packet.payload.protodst)
     arp_src_ip = str(packet.payload.protosrc)
