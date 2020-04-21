@@ -55,6 +55,8 @@ class Tutorial (object):
     should work for all the scenarios
     """
 
+    self.connection.
+
   def resend_packet (self, packet_in, out_port):
     """
     Instructs the switch to resend a packet that it had sent to us.
