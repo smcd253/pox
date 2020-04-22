@@ -101,7 +101,7 @@ class Tutorial (object):
       invoke router_handler and pass the object (i.e., self) and the packet and packet_in
     """
     # try switch only first
-    switch_handler(self, packet, packet_in, port)
+    switch_handler(self, packet, packet_in)
 
 
 
