@@ -97,17 +97,13 @@ def switch_handler(sw_object, packet, packet_in, _port):
   if packet.dst in sw_object.mac_to_port:
     # Send packet out the associated port
     print "Destination " + str(packet.dst) + " known. Forward msg to port " + str(sw_object.mac_to_port[packet.dst]) + "."
-    # sw_object.resend_packet(packet_in, sw_object.mac_to_port[packet.dst])
+    sw_object.resend_packet(packet_in, sw_object.mac_to_port[packet.dst])
 
+    # install flow on switch
     print "Installing flow..." + str(sw_object.mac_to_port[packet.dst])
-
     msg = of.ofp_flow_mod()
     msg.match = of.ofp_match.from_packet(packet, sw_object.mac_to_port[packet.dst])
     msg.match.dl_dst = packet.dst
-    # # msg.match.dl_type = 0x800
-    # # msg.priority = 42
-    # msg.idle_timeout = 60
-    # msg.hard_timeout = 600
     msg.actions.append(of.ofp_action_output(port = sw_object.mac_to_port[packet.dst]))
     msg.data = packet_in
     sw_object.connection.send(msg)
