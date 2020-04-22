@@ -24,3 +24,19 @@ log = core.getLogger()
 """
 
 def router_handler(rt_object, packet, packet_in):
+
+  # Step 1: Arp Request from Source
+  # if destination ip (packet.payload.dst) is on same network (longest prefix match) --> act like switch
+    # switch_handler(rt_object, packet, packet_in)
+  # else --> act like router
+    # respond with arp reply
+  
+  # Step 2: ICMP Request (from source)
+  # if destination ip is in THIS routing table --> make arp request
+    # arp request to destination ip (packet.payload.dst)
+  # else
+    # broadcast arp request
+  
+  # Step 3: Arp Reply 
+  # if reply successful --> forward ICMP request
+  # else --> tell source (destination unreachable)

@@ -54,8 +54,8 @@ class Tutorial (object):
     and switches in such a way that your single piece of switch code and router code along with your data structure design
     should work for all the scenarios
     """
-
-    self.connection.
+    self.mac_to_port = {}
+    self.routing_table = {""" fill with routing table """}
 
   def resend_packet (self, packet_in, out_port):
     """
@@ -96,7 +96,7 @@ class Tutorial (object):
     else: (if it is not switch, it means router. We have only two kinds of devices, one is switch and one is router)
       invoke router_handler and pass the object (i.e., self) and the packet and packet_in
     """
-
+    router_handler(self, packet, packet_in)
 
 def launch ():
   """
