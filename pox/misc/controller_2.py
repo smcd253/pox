@@ -57,10 +57,11 @@ class Tutorial (object):
     """
     self.mac_to_port = {}
     self.routing_table = {""" fill with routing table """}
-    routing_table = OrderedDict(( ("10.0.1.0/24", {"Port": 1, "RouterInterface": "10.0.1.1"}),
-                                  ("10.0.2.0/24", {"Port": 2, "RouterInterface": '10.0.2.1'}),
-                                  ('10.0.3.0/24', {'Port': 3, 'RouterInterface':'10.0.3.1'})))
-                                  
+    routing_table = OrderedDict({ "10.0.0.2/24": {"Port": 1, "RouterInterface": "10.0.0.1"},
+                                  "20.0.0.2/24": {"Port": 2, "RouterInterface": '20.0.0.1'},
+                                  '30.0.0.2/24': {'Port': 3, 'RouterInterface': '30.0.0.1'},
+                                  '30.0.0.3/24': {'Port': 4, 'RouterInterface': '30.0.0.1'}})
+
   def resend_packet (self, packet_in, out_port):
     """
     Instructs the switch to resend a packet that it had sent to us.
