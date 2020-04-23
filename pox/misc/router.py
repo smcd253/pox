@@ -95,8 +95,8 @@ def router_handler(rt_object, packet, packet_in):
       key= str(first)+"."+str(second)+"."+str(third)+"."+str(fourth)+"/"+str(prefix_table[x])
       print(key)
       if key in rt_object.routing_table.keys():
-        print("ip " + list(rt_object.routing_table.keys()).index(key) + " in our network. Call switch_handler().")
+        print("ip " + rt_object.routing_table.keys().index(key) + " in our network. Call switch_handler().")
         switch_handler(rt_object, packet, packet_in)
         break
       else:
-          print("ip " + list(rt_object.routing_table.keys()).index(key) + " NOT in our network. drop.")
+          print("ip " + rt_object.routing_table.keys().index(key) + " NOT in our network. drop.")
