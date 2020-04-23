@@ -56,8 +56,8 @@ class Tutorial (object):
     should work for all the scenarios
     """
     self.mac_to_port = {}
-    self.routing_table = {""" fill with routing table """}
-    routing_table = OrderedDict({ "10.0.0.2/24": {"Port": 1, "RouterInterface": "10.0.0.1"},
+    # self.routing_table = {""" fill with routing table """}
+    self.routing_table = OrderedDict({ "10.0.0.2/24": {"Port": 1, "RouterInterface": "10.0.0.1"},
                                   "20.0.0.2/24": {"Port": 2, "RouterInterface": '20.0.0.1'},
                                   '30.0.0.2/24': {'Port': 3, 'RouterInterface': '30.0.0.1'},
                                   '30.0.0.3/24': {'Port': 4, 'RouterInterface': '30.0.0.1'}})
