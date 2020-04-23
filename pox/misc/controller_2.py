@@ -26,6 +26,7 @@ from pox.lib.packet.icmp import *
 from pox.lib.packet.ipv4 import *
 from switch import *
 from router import *
+from collections import OrderedDict
 
 log = core.getLogger()
 
@@ -56,7 +57,10 @@ class Tutorial (object):
     """
     self.mac_to_port = {}
     self.routing_table = {""" fill with routing table """}
-
+    routing_table = OrderedDict(( ("10.0.1.0/24", {"Port": 1, "RouterInterface": "10.0.1.1"}),
+                                  ("10.0.2.0/24", {"Port": 2, "RouterInterface": '10.0.2.1'}),
+                                  ('10.0.3.0/24', {'Port': 3, 'RouterInterface':'10.0.3.1'})))
+                                  
   def resend_packet (self, packet_in, out_port):
     """
     Instructs the switch to resend a packet that it had sent to us.
