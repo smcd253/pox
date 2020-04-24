@@ -80,7 +80,8 @@ def router_handler(rt_object, packet, packet_in):
       rt_object.ip_to_mac[packet.payload.protosrc] = packet.src
 
     # handle arp request
-    arp_dst_ip = str(packet.payload.protodst)
+    # NOTE: this produces the same output. what is going on??
+    arp_dst_ip = str(packet.payload.dst)
     arp_src_ip = str(packet.payload.protosrc)
 
     # DEBUG
