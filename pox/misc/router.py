@@ -56,8 +56,6 @@ def get_subnet(ip):
   return a+"."+b+"."+c+"."+"0"
 
 def same_subnet(ip1, ip2):
-  print("sub1 = " + get_subnet(ip1))
-  print("sub2 = " + get_subnet(ip2))
   return (get_subnet(ip1) == get_subnet(ip2))
 
 def is_in_local_routing_table(dest_subnet, local_routing_table):
@@ -73,8 +71,6 @@ def is_in_local_routing_table(dest_subnet, local_routing_table):
     return False
   
 def router_handler(rt_object, packet, packet_in):
-  
-  
   # if packet is arp
   if isinstance(packet.next, arp):
     print("this is an arp packet")
@@ -94,7 +90,7 @@ def router_handler(rt_object, packet, packet_in):
     # (longest prefix match) --> act like switch
     # if same_subnet(arp_dst_ip, arp_src_ip) and is_in_local_routing_table(get_subnet(arp_dst_ip), rt_object.routing_table_r1):
     if same_subnet(arp_dst_ip, arp_src_ip):
-      print("success, call switch_handler()")
+      print("src ip: %s and dst ip: %s in same network." % (arp_src_ip, arp_dst_ip))
       switch_handler(rt_object, packet, packet_in)
     
     # if destination ip is on different network, generate arp response
