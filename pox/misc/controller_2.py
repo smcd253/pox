@@ -27,6 +27,7 @@ from pox.lib.packet.ipv4 import *
 from switch import *
 from router import *
 from collections import OrderedDict
+from pox.lib.util import dpid_to_str
 
 log = core.getLogger()
 
@@ -57,9 +58,13 @@ class Tutorial (object):
     """
     self.mac_to_port = {}
     # self.routing_table = {""" fill with routing table """}
-    self.routing_table = OrderedDict({  "10.0.0.0/24": {"Port": 1, "RouterInterface": "10.0.0.1"},
-                                        "20.0.0.0/24": {"Port": 2, "RouterInterface": '20.0.0.1'},
-                                        '30.0.0.0/24': {'Port': 3, 'RouterInterface': '30.0.0.1'}})
+    self.routing_table_r1 = OrderedDict({ "10.0.0.0/24": {"Port": 1, "RouterInterface": "10.0.0.1"},
+                                          "20.0.0.0/24": {"Port": 2, "RouterInterface": '20.0.0.1'},
+                                          '30.0.0.0/24': {'Port': 3, 'RouterInterface': '30.0.0.1'}})
+    
+    self.dpid = dpid_to_str(connection.dpid)
+    # replace "r1" with dpid
+    self.routing_table = {"r1": self.routing_table_r1}
 
   def resend_packet (self, packet_in, out_port):
     """

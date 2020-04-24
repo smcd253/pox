@@ -52,7 +52,7 @@ def switch_handler(sw_object, packet, packet_in):
 def router_handler(rt_object, packet, packet_in):
 
   # Step 1: Arp Request from Source
-  # if destination ip (packet.payload.dst) is on same network (longest prefix match) --> act like switch
+  # if destination ip (packet.payload.protodst) is on same network (longest prefix match) --> act like switch
     # switch_handler(rt_object, packet, packet_in)
   # else --> act like router
     # respond with arp reply
@@ -68,9 +68,14 @@ def router_handler(rt_object, packet, packet_in):
   # else --> tell source (destination unreachable)
 
   ip = str(packet.payload.protodst)
-  print("ip = " + ip)
+  src_ip = str(packet.payload.protosrc)
 
-  prefix_table = [ 24, 24, 24]
+  # note: length corresponds to number of networks
+  prefix_table = []
+  for n in rt_object.routing_table_r1:
+    prefix_table.append(24)
+
+  # prefix_table = [ 24, 24, 24]
   lengthof=len(prefix_table)
   x=0
   ip_bin=0
@@ -80,11 +85,12 @@ def router_handler(rt_object, packet, packet_in):
       ip_bin=temp_int+ip_bin
       x=x+1
 
-  for x in range(0, lengthof-1):
+  for x in range(0, lengthof):
       temp_dec= math.pow(2,prefix_table[x])
       temp_dec = int(temp_dec-1)
       temp_bin = temp_dec<<32-int(prefix_table[x])
       result_bin = temp_bin & ip_bin
+      # DEBUG
       print("Match #", x)
       first= result_bin>>24
       second= result_bin & 16711680
@@ -93,10 +99,16 @@ def router_handler(rt_object, packet, packet_in):
       third= third>>8
       fourth= result_bin & 255
       key= str(first)+"."+str(second)+"."+str(third)+"."+str(fourth)+"/"+str(prefix_table[x])
+      # DEBUG
       print(key)
-      if key in rt_object.routing_table.keys():
-        print("ip " + rt_object.routing_table.keys().index(key) + " in our network. Call switch_handler().")
+
+      # if destination in same network, act like switch
+      if key in rt_object.routing_table_r1.keys():
+        # DEBUG
+        print("ip " + rt_object.routing_table_r1.keys().index(key) + " in our network. Call switch_handler().")
         switch_handler(rt_object, packet, packet_in)
         break
+      # else, determine if destination reachable (check routing table to see if destination in topology)
       else:
-          print("ip " + rt_object.routing_table.keys().index(key) + " NOT in our network. drop.")
+        # DEBUG
+        print("ip " + rt_object.routing_table_r1.keys().index(key) + " NOT in our network. drop.")
