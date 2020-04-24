@@ -79,9 +79,9 @@ def router_handler(rt_object, packet, packet_in):
   if isinstance(packet.next, arp):
     print("this is an arp packet")
 
-    # check if in ip_to_mac, if not add
-    if(packet.payload.protosrc not in ip_to_mac):
-      ip_to_mac[packet.payload.protosrc] = packet.src
+    # check if in rt_object.ip_to_mac, if not add
+    if(packet.payload.protosrc not in rt_object.ip_to_mac):
+      rt_object.ip_to_mac[packet.payload.protosrc] = packet.src
 
     # handle arp request
     arp_dst_ip = str(packet.payload.protodst)
@@ -107,7 +107,7 @@ def router_handler(rt_object, packet, packet_in):
       arp_reply.protodst= packet.payload.protosrc
       eth= ethernet()
       eth.type = ethernet.ARP_TYPE
-      eth.dst = ip_to_mac[packet.payload.protosrc]
+      eth.dst = rt_object.ip_to_mac[packet.payload.protosrc]
       eth.src = packet.dst
       eth.payload = arp_reply
       msg = of.ofp_packet_out()
@@ -115,7 +115,7 @@ def router_handler(rt_object, packet, packet_in):
       action = of.ofp_action_output(port = packet_in.in_port)
       msg.actions.append(action)
 
-      print("ARP Reply: answering MAC %s on port %d" % (ip_to_mac[packet.payload.protosrc], packet_in.in_port))
+      print("ARP Reply: answering MAC %s on port %d" % (rt_object.ip_to_mac[packet.payload.protosrc], packet_in.in_port))
       self.connection.send(msg)
 
   # else --> act like router and respond with arp reply
