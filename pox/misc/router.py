@@ -26,8 +26,9 @@ log = core.getLogger()
 """
 def switch_handler(sw_object, packet, packet_in):
   if packet.src not in sw_object.mac_to_port:
-        print "Learning that " + str(packet.src) + " is attached at port " + str(packet_in.in_port)
-        sw_object.mac_to_port[packet.src] = packet_in.in_port
+    # DEBUG
+    print "Learning that " + str(packet.src) + " is attached at port " + str(packet_in.in_port)
+    sw_object.mac_to_port[packet.src] = packet_in.in_port
 
   # if the port associated with the destination MAC of the packet is known:
   if packet.dst in sw_object.mac_to_port:
@@ -70,13 +71,19 @@ def is_in_local_routing_table(dest_subnet, local_routing_table):
     return True
   else:
     return False
-
+  
 def router_handler(rt_object, packet, packet_in):
-  print("dafuq is going on?")
+  
+  
   # if packet is arp
-  if not isinstance(packet.next, ipv4):
+  if isinstance(packet.next, arp):
     print("this is an arp packet")
-    # arp request
+
+    # check if in ip_to_mac, if not add
+    if(packet.payload.protosrc not in ip_to_mac):
+      ip_to_mac[packet.payload.protosrc] = packet.src
+
+    # handle arp request
     arp_dst_ip = str(packet.payload.protodst)
     arp_src_ip = str(packet.payload.protosrc)
 
@@ -89,9 +96,31 @@ def router_handler(rt_object, packet, packet_in):
     if same_subnet(arp_dst_ip, arp_src_ip):
       print("success, call switch_handler()")
       switch_handler(rt_object, packet, packet_in)
+    
+    # if destination ip is on different network, generate arp response
+    else:
+      arp_reply= arp()
+      arp_reply.opcode = arp.REPLY
+      arp_reply.hwsrc = packet.dst #Destination now is the source MAC address
+      arp_reply.hwdst = packet.src
+      arp_reply.protosrc = packet.payload.protodst
+      arp_reply.protodst= packet.payload.protosrc
+      eth= ethernet()
+      eth.type = ethernet.ARP_TYPE
+      eth.dst = ip_to_mac[packet.payload.protosrc]
+      eth.src = packet.dst
+      eth.payload = arp_reply
+      msg = of.ofp_packet_out()
+      msg.data = eth.pack()
+      action = of.ofp_action_output(port = packet_in.in_port)
+      msg.actions.append(action)
 
-  # else --> act like router
-    # respond with arp reply
+      print("ARP Reply: answering MAC %s on port %d" % (ip_to_mac[packet.payload.protosrc], packet_in.in_port))
+      self.connection.send(msg)
+
+  # else --> act like router and respond with arp reply
+  elif isinstance(packet.next, ipv4):
+
   # Step 2: ICMP Request (from source) (if packet is icmp request or reply)
   # if destination ip is in THIS routing table --> make arp request
     # arp request to destination ip (packet.payload.dst)

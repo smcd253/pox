@@ -43,6 +43,7 @@ class Tutorial (object):
 
     # This binds our PacketIn event listener
     connection.addListeners(self)
+    self.dpid = dpid_to_str(connection.dpid)
 
     """
     [555 Comments]
@@ -56,13 +57,17 @@ class Tutorial (object):
     and switches in such a way that your single piece of switch code and router code along with your data structure design
     should work for all the scenarios
     """
+    # mac to port table
     self.mac_to_port = {}
+
+    # ip to mac table
+    self.ip_to_mac = {}
+    
     # self.routing_table = {""" fill with routing table """}
     self.routing_table_r1 = OrderedDict({ "10.0.0.0/24": {"Port": 1, "RouterInterface": "10.0.0.1"},
                                           "20.0.0.0/24": {"Port": 2, "RouterInterface": '20.0.0.1'},
                                           '30.0.0.0/24': {'Port': 3, 'RouterInterface': '30.0.0.1'}})
     
-    self.dpid = dpid_to_str(connection.dpid)
     # replace "r1" with dpid
     self.routing_table = {"r1": self.routing_table_r1}
 
