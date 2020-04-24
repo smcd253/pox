@@ -60,7 +60,13 @@ def same_subnet(ip1, ip2):
   return (get_subnet(ip1) == get_subnet(ip2))
 
 def is_in_local_routing_table(ip, local_routing_table):
-  if ip in local_routing_table.keys():
+  strip_net_addrs = local_routing_table.keys()
+  for i in strip_net_addrs:
+    print("i before strip " + i)
+    i = get_subnet(i)
+    print("i after strip " + i)
+    
+  if ip in strip_net_addrs:
     print("ip " + ip + " in routing table")
     return True
   else:
