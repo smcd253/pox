@@ -82,7 +82,7 @@ def router_handler(rt_object, packet, packet_in):
     # arp request to destination ip (packet.payload.dst)
   # else
     # broadcast arp request
-  else:
+  # else:
 
  
   
