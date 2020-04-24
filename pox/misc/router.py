@@ -49,66 +49,52 @@ def switch_handler(sw_object, packet, packet_in):
     print str(packet.dst) + " not known, resend to all ports."
     sw_object.resend_packet(packet_in, of.OFPP_ALL)
 
+def get_subnet(ip):
+  s = str(ip)
+  (a,b,c,d) = s.split('.')
+  return a+"."+b+"."+c+"."+"0"
+
+def same_subnet(ip1, ip2):
+  return (get_subnet(ip1) == get_subnet(ip2))
+
+def is_in_local_routing_table(ip, local_routing_table):
+  if ip in local_routing_table.keys():
+    return True
+  else:
+    return False
+
 def router_handler(rt_object, packet, packet_in):
 
-  # Step 1: Arp Request from Source
-  # if destination ip (packet.payload.protodst) is on same network (longest prefix match) --> act like switch
-    # switch_handler(rt_object, packet, packet_in)
+  # if packet is arp
+  if not isinstance(pacet.next, ipv4):
+    # arp request
+    # if destination ip (packet.payload.protodst) is on same network (longest prefix match) --> act like switch
+    arp_dst_ip = str(packet.payload.protodst)
+    arp_src_ip = str(packet.payload.protosrc)
+    if same_subnet(arp_dst_ip, arp_src_ip):
+      switch_handler(rt_object, packet, packet_in)
+      
   # else --> act like router
     # respond with arp reply
-  
-  # Step 2: ICMP Request (from source)
+  # Step 2: ICMP Request (from source) (if packet is icmp request or reply)
   # if destination ip is in THIS routing table --> make arp request
     # arp request to destination ip (packet.payload.dst)
   # else
     # broadcast arp request
+  else:
+
+ 
+  
+  
   
   # Step 3: Arp Reply 
   # if reply successful --> forward ICMP request
   # else --> tell source (destination unreachable)
 
-  ip = str(packet.payload.protodst)
-  src_ip = str(packet.payload.protosrc)
+  
 
-  # note: length corresponds to number of networks
-  prefix_table = []
-  for n in rt_object.routing_table_r1:
-    prefix_table.append(24)
-
-  # prefix_table = [ 24, 24, 24]
-  lengthof=len(prefix_table)
-  x=0
-  ip_bin=0
-  while x <= 3:
-      temp = ip.split(".")[x]
-      temp_int= int(temp)<<24-x*8
-      ip_bin=temp_int+ip_bin
-      x=x+1
-
-  for x in range(0, lengthof):
-      temp_dec= math.pow(2,prefix_table[x])
-      temp_dec = int(temp_dec-1)
-      temp_bin = temp_dec<<32-int(prefix_table[x])
-      result_bin = temp_bin & ip_bin
-      # DEBUG
-      print("Match #", x)
-      first= result_bin>>24
-      second= result_bin & 16711680
-      second= second>>16
-      third= result_bin & 65280
-      third= third>>8
-      fourth= result_bin & 255
-      key= str(first)+"."+str(second)+"."+str(third)+"."+str(fourth)+"/"+str(prefix_table[x])
-      # DEBUG
-      print(key)
-
-      # if destination in same network, act like switch
-      if key in rt_object.routing_table_r1.keys():
-        # DEBUG
-        print("ip " + rt_object.routing_table_r1.keys().index(key) + " in our network. Call switch_handler().")
-        switch_handler(rt_object, packet, packet_in)
-        break
-      # else, determine if destination reachable (check routing table to see if destination in topology)
-      else:
-        # DEBUG
-        print("ip " + rt_object.routing_table_r1.keys().index(key) + " NOT in our network. drop.")
+  my_subnet = get_subnet(src_ip)
+  dest_subnet = get_subnet(dst_ip)
+  if (my_subnet is dest_subnet):
+    switch_handler(rt_object, )
+  else if ()
