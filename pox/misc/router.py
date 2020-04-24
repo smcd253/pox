@@ -68,12 +68,13 @@ def router_handler(rt_object, packet, packet_in):
   # if packet is arp
   if not isinstance(pacet.next, ipv4):
     # arp request
-    # if destination ip (packet.payload.protodst) is on same network (longest prefix match) --> act like switch
     arp_dst_ip = str(packet.payload.protodst)
     arp_src_ip = str(packet.payload.protosrc)
-    if same_subnet(arp_dst_ip, arp_src_ip):
+    # if destination ip (packet.payload.protodst) is on same network and this network 
+    # (longest prefix match) --> act like switch
+    if same_subnet(arp_dst_ip, arp_src_ip) and is_in_local_routing_table(arp_dst_ip, rt_object.routing_table_r1):
       switch_handler(rt_object, packet, packet_in)
-      
+
   # else --> act like router
     # respond with arp reply
   # Step 2: ICMP Request (from source) (if packet is icmp request or reply)
