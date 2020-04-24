@@ -91,11 +91,3 @@ def router_handler(rt_object, packet, packet_in):
   # Step 3: Arp Reply 
   # if reply successful --> forward ICMP request
   # else --> tell source (destination unreachable)
-
-  
-
-  my_subnet = get_subnet(src_ip)
-  dest_subnet = get_subnet(dst_ip)
-  if (my_subnet is dest_subnet):
-    switch_handler(rt_object, )
-  else if ()
