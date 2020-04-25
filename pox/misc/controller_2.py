@@ -44,7 +44,7 @@ class Tutorial (object):
     # This binds our PacketIn event listener
     connection.addListeners(self)
     self.dpid = dpid_to_str(connection.dpid)
-
+    
     """
     [555 Comments]
     In scenario 2, there is only one router. So, classify it as a router and initialize all the data structures you need for
@@ -57,6 +57,7 @@ class Tutorial (object):
     and switches in such a way that your single piece of switch code and router code along with your data structure design
     should work for all the scenarios
     """
+    # TODO: modify all datastructures and functions to take dpid
 
     # buffer
     self.buffer = {}

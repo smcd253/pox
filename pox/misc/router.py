@@ -14,6 +14,8 @@ import math
 
 log = core.getLogger()
 
+# TODO: modify all datastructures and functions to take dpid
+
 """
 [555 Comments]
   Function : router_handler
@@ -24,6 +26,7 @@ log = core.getLogger()
       packet    : The packet that is received from the packet forwarding switch.
       packet_in : The packet_in object that is received from the packet forwarding switch
 """
+# TODO: clean this up (maybe take out functional code and implement where needed?)
 def switch_handler(sw_object, packet, packet_in):
   if packet.src not in sw_object.mac_to_port:
     # DEBUG
@@ -176,16 +179,19 @@ def ipv4_handler(rt_object, packet, packet_in):
   print("packet.srcip = " + str(packet.next.srcip))
   print("packet.dstip = " + str(packet.next.dstip))
   print("packet.payload = " + str(packet.next.payload))
+  # TODO: implement valid ip checking
   # if destination ip is valid (in routing table or one of routers)
   # if ip_in_table(rt_object, packet, packet_in): # FIX THIS!!!
   valid_ip = True
   if valid_ip:
+    # TODO: implement icmp reply for destination = router
     # if packet meant for THIS router
       # if icmp packet and type == request
       # if isinstance(packet.next.next, icmp):
 
         # generate icmp reply
     # else (packet meant for someone else)
+
     # INDENT EVERYTHING UNDER HEAR!
     # if we are waiting for the arp reply to learn the mac address of the next hop
     # cache this packet
