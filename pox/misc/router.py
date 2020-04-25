@@ -80,6 +80,9 @@ def release_buffer(rt_object, dstip):
     del rt_object.buffer[dstip][0]
 
 def arp_handler(rt_object, packet, packet_in):
+  # learn route
+  rt_object.ip_to_port[packet.next.protosrc] = packet_in.in_port
+
   print("this is an arp packet")
 
   # check if in rt_object.ip_to_mac, if not add
@@ -132,8 +135,6 @@ def arp_handler(rt_object, packet, packet_in):
   elif packet.next.opcode == arp.REPLY:
     # Learn source MAC addr of sender (next hop)
     rt_object.ip_to_mac[packet.payload.protosrc] = packet.next.hwsrc 
-    print("ip_to_port[%s] = %d" % (str(packet.next.next.srcip), rt_object.ip_to_port[packet.next.next.srcip]))
-    rt_object.ip_to_port[packet.next.next.srcip] = packet_in.in_port
 
     # release buffer
     release_buffer(rt_object, packet.payload.protosrc)
@@ -168,6 +169,9 @@ def generate_arp_request(rt_object, packet, packet_in):
     print("Sending ARP Request on behalf of host at IP %s on port %d." % (packet.next.srcip, packet_in.in_port))
 
 def ipv4_handler(rt_object, packet, packet_in):
+  # learn route
+  rt_object.ip_to_port[packet.next.srcip] = packet_in.in_port
+
   print("got ipv4 packet!")
   print("packet.srcip = " + str(packet.next.srcip))
   print("packet.dstip = " + str(packet.next.dstip))
@@ -200,7 +204,7 @@ def ipv4_handler(rt_object, packet, packet_in):
     
     # we've already received the arp reply, so forward to known destination
     else: 
-      rt_object.resend_packet(packet_in, rt_object.ip_to_port[str(packet.next.dstip)])
+      rt_object.resend_packet(packet_in, rt_object.ip_to_port[packet.next.dstip])
 
   # ip invalid, generate icmp reply dest unreachable
   else:
