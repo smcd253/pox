@@ -128,7 +128,7 @@ def arp_handler(rt_object, packet, packet_in):
     else:
       print("something went wrong")
   # if this is an arp reply    
-  elif packet.opcode == arp.REPLY:
+  elif packet.next.opcode == arp.REPLY:
     # Learn source MAC addr of sender (next hop)
     rt_object.ip_to_mac[packet.payload.protosrc] = packet.hwsrc 
     rt_object.ip_to_port[packet.payload.protosrc] = packet_in.in_port
