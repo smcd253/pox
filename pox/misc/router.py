@@ -72,11 +72,12 @@ def same_subnet(ip1, ip2):
 
 def release_buffer(rt_object, dstip):
   while (len(rt_object.buffer[dstip]) > 0):
-    (buffer_id, inport) = rt_object.buffer[dstip]
-    msg = of.ofp_packet_out(buffer_id=buffer_id, in_port=inport)
-    msg.actions.append(of.ofp_action_dl_addr.set_dst(rt_object.ip_to_mac[dstip]))
-    msg.actions.append(of.ofp_action_output(port = rt_object.ip_to_port[dstip]))
-    rt_object.connection.send(msg)
+    print("buffer[%s] = %s" % (dstip, rt_object.buffer[dstip])
+    # (buffer_id, inport) = rt_object.buffer[dstip]
+    # msg = of.ofp_packet_out(buffer_id=buffer_id, in_port=inport)
+    # msg.actions.append(of.ofp_action_dl_addr.set_dst(rt_object.ip_to_mac[dstip]))
+    # msg.actions.append(of.ofp_action_output(port = rt_object.ip_to_port[dstip]))
+    # rt_object.connection.send(msg)
 
 def arp_handler(rt_object, packet, packet_in):
   print("this is an arp packet")
