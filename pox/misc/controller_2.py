@@ -57,12 +57,19 @@ class Tutorial (object):
     and switches in such a way that your single piece of switch code and router code along with your data structure design
     should work for all the scenarios
     """
+
+    # buffer
+    self.buffer = {}
+
     # mac to port table
     self.mac_to_port = {}
 
     # ip to mac table
     self.ip_to_mac = {}
     
+    # ip to port table
+    self.ip_to_port = {}
+
     # self.routing_table = {""" fill with routing table """}
     self.routing_table_r1 = { "10.0.0.0": {"prefix": 24, "port": 1, "router_interface": "10.0.0.1"},
                               "20.0.0.0": {"prefix": 24, "port": 2, "router_interface": '20.0.0.1'},
