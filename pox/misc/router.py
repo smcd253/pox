@@ -123,9 +123,13 @@ def router_handler(rt_object, packet, packet_in):
   # if packet is arp
   if isinstance(packet.next, arp):
     arp_handler(rt_object, packet, packet_in)
-    
+
   # else --> act like router and respond with arp reply
-  # elif isinstance(packet.next, ipv4):
+  elif isinstance(packet.next, ipv4):
+    print("got ipv4 packet!")
+    print("packet.srcip = " + str(packet.srcip))
+    print("packet.dstip = " + str(packet.dstip))
+    print("packet.payload = " + str(packet.payload))
 
   # Step 2: ICMP Request (from source) (if packet is icmp request or reply)
   # if destination ip is in THIS routing table --> make arp request
