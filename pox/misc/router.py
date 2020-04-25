@@ -90,7 +90,7 @@ def router_handler(rt_object, packet, packet_in):
     print("dst_ip = " + arp_dst_ip + ", src_ip = " + arp_src_ip)
     
     # if destination ip is the router (default gw), generate arp response
-    if (arp_dst_ip == rt_object.routing_table_r1[get_subnet(packet.src)].router_interface):
+    if (arp_dst_ip == rt_object.routing_table_r1[get_subnet(packet.payload.protosrc)].router_interface):
       arp_reply= arp()
       arp_reply.opcode = arp.REPLY
       arp_reply.hwsrc = packet.dst #Destination now is the source MAC address
