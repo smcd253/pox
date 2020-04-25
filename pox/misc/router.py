@@ -108,7 +108,7 @@ def router_handler(rt_object, packet, packet_in):
       msg.actions.append(action)
 
       print("ARP Reply: answering MAC %s on port %d" % (rt_object.ip_to_mac[packet.payload.protosrc], packet_in.in_port))
-      self.connection.send(msg)
+      rt_object.connection.send(msg)
 
     # if destination ip (packet.payload.protodst) is on same network and this network 
     # (longest prefix match) --> act like switch
