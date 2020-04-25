@@ -137,11 +137,11 @@ def arp_handler(rt_object, packet, packet_in):
     release_buffer(rt_object, packet.payload.protosrc)
 
 
-def ip_in_table(rt_object, packet, packet_in):
-  for (rt in rt_object):
-    if packet.next.dstip in rt:
-      return True
-  return False
+# def ip_in_table(rt_object, packet, packet_in):
+#   for (rt in rt_object):
+#     if packet.next.dstip in rt:
+#       return True
+#   return False
 
 def generate_arp_request(rt_object, packet, packet_in):
     arp_req = arp()
