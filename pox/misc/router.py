@@ -70,7 +70,7 @@ def same_subnet(ip1, ip2):
 #   else:
 #     return False
 
-def arp_handler(rt_object, packet, packet_in:
+def arp_handler(rt_object, packet, packet_in):
   print("this is an arp packet")
 
   # check if in rt_object.ip_to_mac, if not add
