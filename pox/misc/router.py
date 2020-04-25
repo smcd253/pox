@@ -95,7 +95,7 @@ def arp_handler(rt_object, packet, packet_in):
   # DEBUG
   print("dst_ip = " + arp_dst_ip + ", src_ip = " + arp_src_ip)
   
-  if packet.opcode == arp.REQUEST:
+  if packet.next.opcode == arp.REQUEST:
     # if destination ip is the router (default gw), generate arp response
     if (arp_dst_ip == rt_object.routing_table_r1[get_subnet(packet.payload.protosrc)]["router_interface"]):
       arp_reply = arp()
