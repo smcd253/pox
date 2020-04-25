@@ -132,7 +132,8 @@ def arp_handler(rt_object, packet, packet_in):
   elif packet.next.opcode == arp.REPLY:
     # Learn source MAC addr of sender (next hop)
     rt_object.ip_to_mac[packet.payload.protosrc] = packet.next.hwsrc 
-    rt_object.ip_to_port[packet.payload.protosrc] = packet_in.in_port
+    print("ip_to_port[%s] = %d" % (str(packet.next.next.srcip), rt_object.ip_to_port[packet.next.next.srcip]))
+    rt_object.ip_to_port[packet.next.next.srcip] = packet_in.in_port
 
     # release buffer
     release_buffer(rt_object, packet.payload.protosrc)
