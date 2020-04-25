@@ -199,7 +199,7 @@ def ipv4_handler(rt_object, packet, packet_in):
     
     # we've already received the arp reply, so forward to known destination
     else: 
-      rt_object.resend_packet(packet_in, rt_object.ip_to_port[packet.next.dstip])
+      rt_object.resend_packet(packet_in, rt_object.ip_to_port[str(packet.next.dstip)])
 
   # ip invalid, generate icmp reply dest unreachable
   else:
