@@ -171,7 +171,9 @@ def ipv4_handler(rt_object, packet, packet_in):
   print("packet.dstip = " + str(packet.next.dstip))
   print("packet.payload = " + str(packet.next.payload))
   # if destination ip is valid (in routing table or one of routers)
-  if ip_in_table(rt_object, packet, packet_in): # FIX THIS!!!
+  # if ip_in_table(rt_object, packet, packet_in): # FIX THIS!!!
+  valid_ip = True
+  if valid_ip:
     # if packet meant for THIS router
       # if icmp packet and type == request
       # if isinstance(packet.next.next, icmp):
