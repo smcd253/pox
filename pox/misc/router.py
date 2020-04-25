@@ -72,12 +72,11 @@ def same_subnet(ip1, ip2):
 
 def release_buffer(rt_object, dstip):
   while (len(rt_object.buffer[dstip]) > 0):
-    print("buffer[%s] = %s" % (dstip, rt_object.buffer[dstip]))
-    # (buffer_id, inport) = rt_object.buffer[dstip]
-    # msg = of.ofp_packet_out(buffer_id=buffer_id, in_port=inport)
-    # msg.actions.append(of.ofp_action_dl_addr.set_dst(rt_object.ip_to_mac[dstip]))
-    # msg.actions.append(of.ofp_action_output(port = rt_object.ip_to_port[dstip]))
-    # rt_object.connection.send(msg)
+    # print("buffer[%s] = %s" % (dstip, rt_object.buffer[dstip]))
+    msg = of.ofp_packet_out(buffer_id=rt_object.buffer[dstip]["buffer_id"], in_port=rt_object.buffer[dstip]["port"])
+    msg.actions.append(of.ofp_action_dl_addr.set_dst(rt_object.ip_to_mac[dstip]))
+    msg.actions.append(of.ofp_action_output(port = rt_object.ip_to_port[dstip]))
+    rt_object.connection.send(msg)
 
 def arp_handler(rt_object, packet, packet_in):
   print("this is an arp packet")
@@ -190,7 +189,7 @@ def ipv4_handler(rt_object, packet, packet_in):
         rt_object.buffer[packet.next.dstip] = []
 
       # cache packet
-      buffer_entry = (packet_in.buffer_id, packet_in.in_port)
+      buffer_entry = {"buffer_id": packet_in.buffer_id, "port": packet_in.in_port}
       rt_object.buffer[packet.next.dstip].append(buffer_entry)
       print("Destination: %s unknown. Buffer packet: %s" % (packet.next.dstip, packet_in.buffer_id))
 
