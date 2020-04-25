@@ -81,8 +81,9 @@ def router_handler(rt_object, packet, packet_in):
 
     # handle arp request
     # NOTE: this produces the same output. what is going on??
-    arp_dst_ip = str(packet.dstip)
-    arp_src_ip = str(packet.srcip)
+    print("packet.payload = " + packet.payload)
+    arp_dst_ip = str(packet.payload.protodst)
+    arp_src_ip = str(packet.payload.protosrc)
 
     # DEBUG
     print("dst_ip = " + arp_dst_ip + ", src_ip = " + arp_src_ip)
