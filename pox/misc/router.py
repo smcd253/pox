@@ -69,57 +69,61 @@ def same_subnet(ip1, ip2):
 #     return True
 #   else:
 #     return False
+
+def arp_handler(rt_object, packet, packet_in:
+  print("this is an arp packet")
+
+  # check if in rt_object.ip_to_mac, if not add
+  if(packet.payload.protosrc not in rt_object.ip_to_mac):
+    rt_object.ip_to_mac[packet.payload.protosrc] = packet.src
+
+  # handle arp request
+  # NOTE: this produces the same output. what is going on??
+  print("packet.payload = " + str(packet.payload))
+  print("packet._to_str() = " + packet._to_str())
+  arp_dst_ip = str(packet.payload.protodst)
+  arp_src_ip = str(packet.payload.protosrc)
+
+  # DEBUG
+  print("dst_ip = " + arp_dst_ip + ", src_ip = " + arp_src_ip)
   
+  # if destination ip is the router (default gw), generate arp response
+  if (arp_dst_ip == rt_object.routing_table_r1[get_subnet(packet.payload.protosrc)]["router_interface"]):
+    arp_reply= arp()
+    arp_reply.opcode = arp.REPLY
+    arp_reply.hwsrc = packet.dst #Destination now is the source MAC address
+    arp_reply.hwdst = packet.src
+    arp_reply.protosrc = packet.payload.protodst
+    arp_reply.protodst= packet.payload.protosrc
+    eth= ethernet()
+    eth.type = ethernet.ARP_TYPE
+    eth.dst = rt_object.ip_to_mac[packet.payload.protosrc]
+    eth.src = packet.dst
+    eth.payload = arp_reply
+    msg = of.ofp_packet_out()
+    msg.data = eth.pack()
+    action = of.ofp_action_output(port = packet_in.in_port)
+    msg.actions.append(action)
+
+    print("ARP Reply: answering MAC %s on port %d" % (rt_object.ip_to_mac[packet.payload.protosrc], packet_in.in_port))
+    rt_object.connection.send(msg)
+
+  # if destination ip (packet.payload.protodst) is on same network and this network 
+  # (longest prefix match) --> act like switch
+  # if same_subnet(arp_dst_ip, arp_src_ip) and is_in_local_routing_table(get_subnet(arp_dst_ip), rt_object.routing_table_r1):
+  elif same_subnet(arp_dst_ip, arp_src_ip):
+    print("src ip: %s and dst ip: %s in same network." % (arp_src_ip, arp_dst_ip))
+    switch_handler(rt_object, packet, packet_in)
+  
+  # DEBUG
+  else:
+    print("something went wrong")
+
 def router_handler(rt_object, packet, packet_in):
   # if packet is arp
   if isinstance(packet.next, arp):
-    print("this is an arp packet")
-
-    # check if in rt_object.ip_to_mac, if not add
-    if(packet.payload.protosrc not in rt_object.ip_to_mac):
-      rt_object.ip_to_mac[packet.payload.protosrc] = packet.src
-
-    # handle arp request
-    # NOTE: this produces the same output. what is going on??
-    print("packet.payload = " + str(packet.payload))
-    print("packet._to_str() = " + packet._to_str())
-    arp_dst_ip = str(packet.payload.protodst)
-    arp_src_ip = str(packet.payload.protosrc)
-
-    # DEBUG
-    print("dst_ip = " + arp_dst_ip + ", src_ip = " + arp_src_ip)
+    arp_handler(rt_object, packet, packet_in)
     
-    # if destination ip is the router (default gw), generate arp response
-    if (arp_dst_ip == rt_object.routing_table_r1[get_subnet(packet.payload.protosrc)]["router_interface"]):
-      arp_reply= arp()
-      arp_reply.opcode = arp.REPLY
-      arp_reply.hwsrc = packet.dst #Destination now is the source MAC address
-      arp_reply.hwdst = packet.src
-      arp_reply.protosrc = packet.payload.protodst
-      arp_reply.protodst= packet.payload.protosrc
-      eth= ethernet()
-      eth.type = ethernet.ARP_TYPE
-      eth.dst = rt_object.ip_to_mac[packet.payload.protosrc]
-      eth.src = packet.dst
-      eth.payload = arp_reply
-      msg = of.ofp_packet_out()
-      msg.data = eth.pack()
-      action = of.ofp_action_output(port = packet_in.in_port)
-      msg.actions.append(action)
-
-      print("ARP Reply: answering MAC %s on port %d" % (rt_object.ip_to_mac[packet.payload.protosrc], packet_in.in_port))
-      rt_object.connection.send(msg)
-
-    # if destination ip (packet.payload.protodst) is on same network and this network 
-    # (longest prefix match) --> act like switch
-    # if same_subnet(arp_dst_ip, arp_src_ip) and is_in_local_routing_table(get_subnet(arp_dst_ip), rt_object.routing_table_r1):
-    elif same_subnet(arp_dst_ip, arp_src_ip):
-      print("src ip: %s and dst ip: %s in same network." % (arp_src_ip, arp_dst_ip))
-      switch_handler(rt_object, packet, packet_in)
-    
-    # DEBUG
-    else:
-      print("something went wrong")
   # else --> act like router and respond with arp reply
   # elif isinstance(packet.next, ipv4):
 
