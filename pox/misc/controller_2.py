@@ -64,9 +64,9 @@ class Tutorial (object):
     self.ip_to_mac = {}
     
     # self.routing_table = {""" fill with routing table """}
-    self.routing_table_r1 = OrderedDict({ "10.0.0.0/24": {"Port": 1, "RouterInterface": "10.0.0.1"},
-                                          "20.0.0.0/24": {"Port": 2, "RouterInterface": '20.0.0.1'},
-                                          '30.0.0.0/24': {'Port': 3, 'RouterInterface': '30.0.0.1'}})
+    self.routing_table_r1 = { "10.0.0.0": {"prefix": 24, "port": 1, "router_interface": "10.0.0.1"},
+                              "20.0.0.0": {"prefix": 24, "port": 2, "router_interface": '20.0.0.1'},
+                              '30.0.0.0': {"prefix": 24, 'port': 3, 'router_interface': '30.0.0.1'}}
     
     # replace "r1" with dpid
     self.routing_table = {"r1": self.routing_table_r1}
