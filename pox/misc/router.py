@@ -155,9 +155,9 @@ def arp_handler(rt_object, dpid, packet, packet_in):
     rt_object.ip_to_mac[dpid][packet.payload.protosrc] = packet.next.hwsrc 
 
     # release buffer
-    release_buffer(rt_object, packet.payload.protosrc)
+    release_buffer(rt_object, dpid, packet.payload.protosrc)
 
-def generate_arp_request(rt_object, packet, packet_in):
+def generate_arp_request(rt_object, dpid, packet, packet_in):
   """
   Composes and sends arp request.
   @param:   rt_object - controller object
@@ -185,7 +185,7 @@ def generate_arp_request(rt_object, packet, packet_in):
   print("Sending ARP Request on behalf of host at IP %s on port %d." % (packet.next.srcip, packet_in.in_port))
 
 ########################################## ICMP functions ##########################################
-def generate_icmp_reply(rt_object, packet, icmp_type):
+def generate_icmp_reply(rt_object, dpid, packet, icmp_type):
   """
   Composes and sends ICMP reply. Only happens if router interface is destination or destination unreachable.
   @param:   rt_object - controller object
@@ -228,7 +228,7 @@ def generate_icmp_reply(rt_object, packet, icmp_type):
   print('GENERATE_ICMP_REPLY(): Replying to %s with code %d.', str(packet.next.srcip), icmp_type)
 
 ########################################## IPV4 functions ##########################################
-def ip_flow_mod(rt_object, packet):
+def ip_flow_mod(rt_object, dpid, packet):
   """
   Performs IP flow modification and route learning so router does not have to contact controller
   on arrival of every ipv4 packet.
@@ -248,7 +248,7 @@ def ip_flow_mod(rt_object, packet):
   # DEBUG
   print("IP_FLOW_MOD(): Learning IP %s corresponds to MAC %s on PORT %d." % (str(packet.next.dstip), str(rt_object.ip_to_mac[dpid][packet.next.dstip]), rt_object.ip_to_port[dpid][packet.next.dstip]))
 
-def send_ip_packet(rt_object, buf_id, inport, dstip):
+def send_ip_packet(rt_object, dpid, buf_id, inport, dstip):
   """
   Sends ip packet to selected destination ip.
   @param:   rt_object - controller object
@@ -264,21 +264,21 @@ def send_ip_packet(rt_object, buf_id, inport, dstip):
   # DEBUG
   print("SEND_IP_PACKET(): Sending BUFFER_ID %d from IN_PORT %d to IP %s at MAC %s on OUT_PORT %d." % (buf_id, inport, str(dstip), str(rt_object.ip_to_mac[dpid][dstip]), rt_object.ip_to_port[dpid][dstip]))
 
-def release_buffer(rt_object, dstip):
+def release_buffer(rt_object, dpid, dstip):
   """
   Releases ipv4 buffer.
   @param:   rt_object - controller object
   @param:   dstip - destination ip
   """
   while (len(rt_object.buffer[dpid][dstip]) > 0):
-    send_ip_packet(rt_object, rt_object.buffer[dpid][dstip][0]["buffer_id"], rt_object.buffer[dpid][dstip][0]["port"], dstip)
+    send_ip_packet(rt_object, dpid, rt_object.buffer[dpid][dstip][0]["buffer_id"], rt_object.buffer[dpid][dstip][0]["port"], dstip)
     del rt_object.buffer[dpid][dstip][0]
   
   # DEBUG
   # print("RELEASE_BUFFER(): buffer[%s] = %s" % (dstip, rt_object.buffer[dpid][dstip]))
   print("RELEASE_BUFFER(): Not logging right now. Uncomment above to get more info.")
 
-def ipv4_handler(rt_object, packet, packet_in):
+def ipv4_handler(rt_object, dpid, packet, packet_in):
   """
   Handles all incoming ipv4 packets.
   @param:   rt_object - controller object
@@ -299,7 +299,7 @@ def ipv4_handler(rt_object, packet, packet_in):
     if(is_interface(rt_object, dpid, packet.next.dstip)):
       if isinstance(packet.next.next, icmp):
         if(packet.next.next.type == TYPE_ECHO_REQUEST):
-          generate_icmp_reply(rt_object, packet, TYPE_ECHO_REPLY)
+          generate_icmp_reply(rt_object, dpid, packet, TYPE_ECHO_REPLY)
       
     else:
       # if we are waiting for the arp reply to learn the mac address of the next hop
@@ -315,22 +315,22 @@ def ipv4_handler(rt_object, packet, packet_in):
         print("IPV4_HANDLER(): Destination: %s unknown. Buffer packet: %s" % (packet.next.dstip, packet_in.buffer_id))
 
         # generate arp request to learn next hop
-        generate_arp_request(rt_object, packet, packet_in)
+        generate_arp_request(rt_object, dpid, packet, packet_in)
   
       # we've already received the arp reply, so forward to known destination
       else:
         print("IPV4_HANDLER(): Sending packet %s out PORT %d" % (str(packet.payload), rt_object.ip_to_port[dpid][packet.next.dstip]))
-        send_ip_packet(rt_object, packet_in.buffer_id, packet_in.in_port, packet.next.dstip) 
+        send_ip_packet(rt_object, dpid, packet_in.buffer_id, packet_in.in_port, packet.next.dstip) 
 
         # flow mod
-        ip_flow_mod(rt_object, packet)
+        ip_flow_mod(rt_object, dpid, packet)
 
   # ip invalid, generate icmp reply dest unreachable
   else:
-    generate_icmp_reply(rt_object, packet, TYPE_DEST_UNREACH)
+    generate_icmp_reply(rt_object, dpid, packet, TYPE_DEST_UNREACH)
 
 ########################################## MAIN CODE ##########################################
-def router_handler(rt_object, packet, packet_in):
+def router_handler(rt_object, dpid, packet, packet_in):
   """
   Handles all packet coming into switch type 'router.'
   @param:   rt_object - controller object
@@ -343,5 +343,5 @@ def router_handler(rt_object, packet, packet_in):
 
   # else --> act like router 
   elif isinstance(packet.next, ipv4):
-    ipv4_handler(rt_object, packet, packet_in)
+    ipv4_handler(rt_object, dpid, packet, packet_in)
 
