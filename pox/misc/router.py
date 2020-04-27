@@ -234,7 +234,7 @@ def ip_flow_mod(rt_object, packet):
   rt_object.connection.send(msg)
 
   # DEBUG
-  print("IP_FLOW_MOD(): Learning IP %s corresponds to MAC %s on PORT %d." % (str(packet.next.dstip), str(rt_object.ip_to_mac[packet.next.dstip]), str(rt_object.ip_to_port[packet.next.dstip])))
+  print("IP_FLOW_MOD(): Learning IP %s corresponds to MAC %s on PORT %d." % (str(packet.next.dstip), str(rt_object.ip_to_mac[packet.next.dstip]), rt_object.ip_to_port[packet.next.dstip]))
 
 def send_ip_packet(rt_object, buf_id, inport, dstip):
   """
