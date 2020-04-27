@@ -266,7 +266,7 @@ def ipv4_handler(rt_object, packet, packet_in):
         msg.actions.append(of.ofp_action_dl_addr.set_dst(rt_object.ip_to_mac[packet.next.dstip]))
         msg.actions.append(of.ofp_action_output(port = rt_object.ip_to_port[packet.next.dstip]))
         self.connection.send(msg)
-W
+        
   # ip invalid, generate icmp reply dest unreachable
   else:
     generate_icmp_reply(rt_object, packet, packet.next.srcip, packet.next.dstip, TYPE_DEST_UNREACH)
