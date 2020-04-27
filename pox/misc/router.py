@@ -90,7 +90,7 @@ def get_subnet(rt_object, dpid, ip):
   mask = 32
   match = ""
   while match not in rt_object.routing_table[dpid] and mask > 0:
-    match = LPM(mask, ip)
+    match = LPM(mask, str(ip))
     mask -= 1
   return match
   # s = str(ip)
