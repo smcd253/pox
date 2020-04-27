@@ -29,18 +29,17 @@ log = core.getLogger()
 # TODO: clean this up (maybe take out functional code and implement where needed?)
 def act_like_switch(sw_object, packet, packet_in):
   if packet.src not in sw_object.mac_to_port:
-    # DEBUG
-    print "Learning that " + str(packet.src) + " is attached at port " + str(packet_in.in_port)
+    print("ACT_LIKE_SWITCH(): Learning that " + str(packet.src) + " is attached at port " + str(packet_in.in_port))
     sw_object.mac_to_port[packet.src] = packet_in.in_port
 
   # if the port associated with the destination MAC of the packet is known:
   if packet.dst in sw_object.mac_to_port:
     # Send packet out the associated port
-    print "Destination " + str(packet.dst) + " known. Forward msg to port " + str(sw_object.mac_to_port[packet.dst]) + "."
+    print("ACT_LIKE_SWITCH(): Destination " + str(packet.dst) + " known. Forward msg to port " + str(sw_object.mac_to_port[packet.dst]) + ".")
     sw_object.resend_packet(packet_in, sw_object.mac_to_port[packet.dst])
 
     # flow mod
-    print "Installing flow..." + str(sw_object.mac_to_port[packet.dst])
+    print("ACT_LIKE_SWITCH(): Installing flow..." + str(sw_object.mac_to_port[packet.dst]))
     msg = of.ofp_flow_mod()
     msg.match = of.ofp_match.from_packet(packet, sw_object.mac_to_port[packet.dst])
     msg.match.dl_dst = packet.dst
@@ -48,9 +47,8 @@ def act_like_switch(sw_object, packet, packet_in):
     sw_object.connection.send(msg)
 
   else:
-    # Flood the packet out everything but the input port
-    # This part looks familiar, right?
-    print str(packet.dst) + " not known, resend to all ports."
+    # Flood the packet out of all ports except in port
+    print("ACT_LIKE_SWITCH(): MAC" + str(packet.dst) + " not known, resend to all ports.")
     sw_object.resend_packet(packet_in, of.OFPP_ALL)
 
 ########################################## IP parsing functions ##########################################
@@ -74,16 +72,6 @@ def validate_ip(rt_object, ip):
     if ip_sub == subnet:
       return True
   return False
-
-
-def release_buffer(rt_object, dstip):
-  while (len(rt_object.buffer[dstip]) > 0):
-    print("buffer[%s] = %s" % (dstip, rt_object.buffer[dstip]))
-    msg = of.ofp_packet_out(buffer_id=rt_object.buffer[dstip][0]["buffer_id"], in_port=rt_object.buffer[dstip][0]["port"])
-    msg.actions.append(of.ofp_action_dl_addr.set_dst(rt_object.ip_to_mac[dstip]))
-    msg.actions.append(of.ofp_action_output(port = rt_object.ip_to_port[dstip]))
-    rt_object.connection.send(msg)
-    del rt_object.buffer[dstip][0]
 
 ########################################## ARP functions ##########################################
 def arp_handler(rt_object, packet, packet_in):
@@ -242,6 +230,34 @@ def ip_flow_mod(rt_object, packet):
   msg.actions.append( of.ofp_action_output(port = rt_object.ip_to_port[packet.next.dstip]) )
   rt_object.connection.send(msg)
 
+def send_ip_packet(rt_object, buf_id, inport, dstip):
+  """
+  Sends ip packet to selected destination ip.
+  @param:   rt_object - controller object
+  @param:   buf_id - buffer id of outgoing packet
+  @param:   inport - port we received packet from
+  @param:   dstip - destination ip
+  """
+  msg = of.ofp_packet_out(buffer_id=buf_id, in_port=inport)
+  msg.actions.append(of.ofp_action_dl_addr.set_dst(rt_object.ip_to_mac[dstip]))
+  msg.actions.append(of.ofp_action_output(port = rt_object.ip_to_port[dstip]))
+  rt_object.connection.send(msg)
+
+def release_buffer(rt_object, dstip):
+  """
+  Releases ipv4 buffer.
+  @param:   rt_object - controller object
+  @param:   dstip - destination ip
+  """
+  while (len(rt_object.buffer[dstip]) > 0):
+    print("buffer[%s] = %s" % (dstip, rt_object.buffer[dstip]))
+    send_ip_packet(rt_object, rt_object.buffer[dstip][0]["buffer_id"], rt_object.buffer[dstip][0]["port"], dstip)
+    # msg = of.ofp_packet_out(buffer_id=rt_object.buffer[dstip][0]["buffer_id"], in_port=rt_object.buffer[dstip][0]["port"])
+    # msg.actions.append(of.ofp_action_dl_addr.set_dst(rt_object.ip_to_mac[dstip]))
+    # msg.actions.append(of.ofp_action_output(port = rt_object.ip_to_port[dstip]))
+    # rt_object.connection.send(msg)
+    del rt_object.buffer[dstip][0]
+
 def ipv4_handler(rt_object, packet, packet_in):
   """
   Handles all incoming ipv4 packets.
@@ -285,11 +301,12 @@ def ipv4_handler(rt_object, packet, packet_in):
   
       # we've already received the arp reply, so forward to known destination
       else:
-        print("resending packet %s on port %d" % (str(packet.payload), rt_object.ip_to_port[packet.next.dstip])) 
-        msg = of.ofp_packet_out(buffer_id=packet_in.buffer_id, in_port=packet_in.in_port)
-        msg.actions.append(of.ofp_action_dl_addr.set_dst(rt_object.ip_to_mac[packet.next.dstip]))
-        msg.actions.append(of.ofp_action_output(port = rt_object.ip_to_port[packet.next.dstip]))
-        rt_object.connection.send(msg)
+        print("resending packet %s on port %d" % (str(packet.payload), rt_object.ip_to_port[packet.next.dstip]))
+        send_ip_packet(rt_object, packet_in.buffer_id, packet_in.in_port, packet.next.dstip) 
+        # msg = of.ofp_packet_out(buffer_id=packet_in.buffer_id, in_port=packet_in.in_port)
+        # msg.actions.append(of.ofp_action_dl_addr.set_dst(rt_object.ip_to_mac[packet.next.dstip]))
+        # msg.actions.append(of.ofp_action_output(port = rt_object.ip_to_port[packet.next.dstip]))
+        # rt_object.connection.send(msg)
 
         # flow mod
         ip_flow_mod(rt_object, packet)
