@@ -61,18 +61,6 @@ def get_subnet(ip):
 def same_subnet(ip1, ip2):
   return (get_subnet(ip1) == get_subnet(ip2))
 
-# def is_in_local_routing_table(dest_subnet, local_routing_table):
-#   strip_net_addrs = local_routing_table.keys()
-#   for i in strip_net_addrs:
-#     i = get_subnet(i)
-#     print("routing table entry = " + i)
-#   print("dest_subnet = " + dest_subnet)  
-#   if dest_subnet in strip_net_addrs:
-#     print("dest_subnet " + dest_subnet + " in routing table")
-#     return True
-#   else:
-#     return False
-
 def release_buffer(rt_object, dstip):
   while (len(rt_object.buffer[dstip]) > 0):
     print("buffer[%s] = %s" % (dstip, rt_object.buffer[dstip]))
