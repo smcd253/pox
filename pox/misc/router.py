@@ -227,9 +227,9 @@ def ip_flow_mod(rt_object, packet):
   msg = of.ofp_flow_mod()
   msg.idle_timeout = 3600
   msg.hard_timeout = 7200
-  msg.priority = 1000
-  msg.match.dl_type = 0x800 # ip packet
-  msg.match.nw_dst = p.dstip
+  msg.priority = 1000 # set priority to highest
+  msg.match.dl_type = 0x800 # type: ip
+  msg.match.nw_dst = packet.next.dstip
   msg.actions.append( of.ofp_action_dl_addr.set_dst(rt_object.ip_to_mac[packet.next.dstip]) )
   msg.actions.append( of.ofp_action_output(port = rt_object.ip_to_mac[packet.next.dstip]) )
   rt_object.connection.send(msg)
@@ -280,7 +280,7 @@ def ipv4_handler(rt_object, packet, packet_in):
 
         # flow mod
         ip_flow_mod(rt_object, packet)
-        
+
   # ip invalid, generate icmp reply dest unreachable
   else:
     generate_icmp_reply(rt_object, packet, packet.next.srcip, packet.next.dstip, TYPE_DEST_UNREACH)
