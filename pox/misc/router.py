@@ -192,7 +192,7 @@ def generate_icmp_reply(rt_object, packet, srcip, dstip, icmp_type):
     msg.actions.append(of.ofp_action_output(port = of.OFPP_IN_PORT))
     msg.data = e.pack()
     msg.in_port = rt_object.ip_to_port[srcip]
-    rt_object.connections.send(msg)
+    rt_object.connection.send(msg)
 
     print('IP %s pings router at %s, generating icmp reply with code %d...', str(srcip), str(dstip), icmp_type)
 
@@ -218,7 +218,7 @@ def ipv4_handler(rt_object, packet, packet_in):
     # TODO: implement icmp reply for destination = router
     if isinstance(packet.next.next, icmp):
       # if packet meant for THIS router
-      if(is_interface(rt_object, packet.next.dstip)):
+      if(is_interface(rt_object,packet.next.dstip)):
         if(packet.next.next.type == TYPE_ECHO_REQUEST):
           generate_icmp_reply(rt_object, packet, packet.next.srcip, packet.next.dstip, TYPE_ECHO_REPLY)
         
