@@ -93,10 +93,6 @@ def get_subnet(rt_object, dpid, ip):
     match = LPM(mask, str(ip))
     mask -= 1
   return match
-  # s = str(ip)
-  # (a,b,c,d) = s.split('.')
-  # return a+"."+b+"."+c+"."+"0"
-
 
 def same_subnet(rt_object, dpid, ip1, ip2):
   return (get_subnet(rt_object, dpid, ip1) == get_subnet(rt_object, dpid, ip2))
