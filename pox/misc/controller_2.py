@@ -58,11 +58,11 @@ class Tutorial (object):
     should work for all the scenarios
     """
     # TODO: modify all datastructures and functions to take dpid
-    
+
     # buffer
     self.buffer = {}
 
-    # mac to port table
+    # mac to port table (for in-network switching)
     self.mac_to_port = {}
 
     # ip to mac table

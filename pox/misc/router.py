@@ -27,7 +27,7 @@ log = core.getLogger()
       packet_in : The packet_in object that is received from the packet forwarding switch
 """
 # TODO: clean this up (maybe take out functional code and implement where needed?)
-def switch_handler(sw_object, packet, packet_in):
+def act_like_switch(sw_object, packet, packet_in):
   if packet.src not in sw_object.mac_to_port:
     # DEBUG
     print "Learning that " + str(packet.src) + " is attached at port " + str(packet_in.in_port)
@@ -53,6 +53,7 @@ def switch_handler(sw_object, packet, packet_in):
     print str(packet.dst) + " not known, resend to all ports."
     sw_object.resend_packet(packet_in, of.OFPP_ALL)
 
+########################################## IP parsing functions ##########################################
 def get_subnet(ip):
   s = str(ip)
   (a,b,c,d) = s.split('.')
@@ -60,6 +61,20 @@ def get_subnet(ip):
 
 def same_subnet(ip1, ip2):
   return (get_subnet(ip1) == get_subnet(ip2))
+
+def is_interface(rt_object, dstip):
+  for subnet in rt_object.routing_table_r1:
+    if(dstip == rt_object.routing_table_r1[subnet]["router_interface"]):
+      return True
+  return False
+
+def validate_ip(rt_object, ip):
+  ip_sub = get_subnet(ip)
+  for subnet in rt_object.routing_table_r1:
+    if ip_sub == subnet:
+      return True
+  return False
+
 
 def release_buffer(rt_object, dstip):
   while (len(rt_object.buffer[dstip]) > 0):
@@ -70,7 +85,14 @@ def release_buffer(rt_object, dstip):
     rt_object.connection.send(msg)
     del rt_object.buffer[dstip][0]
 
+########################################## ARP functions ##########################################
 def arp_handler(rt_object, packet, packet_in):
+"""
+Handles all incoming arp packets.
+@param:   rt_object - controller object
+@param:   packet - ethernet packet (in this case, packet.next = arp packet)
+@param:   packet_in - ofp_packet_in object (switch to controller due to table miss)
+"""
   # learn route
   rt_object.ip_to_port[packet.next.protosrc] = packet_in.in_port
 
@@ -120,7 +142,7 @@ def arp_handler(rt_object, packet, packet_in):
     # if same_subnet(arp_dst_ip, arp_src_ip) and is_in_local_routing_table(get_subnet(arp_dst_ip), rt_object.routing_table_r1):
     elif same_subnet(arp_dst_ip, arp_src_ip):
       print("src ip: %s and dst ip: %s in same network." % (arp_src_ip, arp_dst_ip))
-      switch_handler(rt_object, packet, packet_in)
+      act_like_switch(rt_object, packet, packet_in)
     
     # DEBUG
     else:
@@ -133,14 +155,13 @@ def arp_handler(rt_object, packet, packet_in):
     # release buffer
     release_buffer(rt_object, packet.payload.protosrc)
 
-
-# def ip_in_table(rt_object, packet, packet_in):
-#   for (rt in rt_object):
-#     if packet.next.dstip in rt:
-#       return True
-#   return False
-
 def generate_arp_request(rt_object, packet, packet_in):
+"""
+Composes and sends arp request.
+@param:   rt_object - controller object
+@param:   packet - ethernet packet (in this case, packet.next = arp packet)
+@param:   packet_in - ofp_packet_in object (switch to controller due to table miss)
+"""
     arp_req = arp()
     arp_req.hwtype = arp_req.HW_TYPE_ETHERNET
     arp_req.prototype = arp_req.PROTO_TYPE_IP
@@ -159,59 +180,58 @@ def generate_arp_request(rt_object, packet, packet_in):
     msg.in_port = packet_in.in_port
     rt_object.connection.send(msg)
 
-    # log.debug("DPID %i, INPORT %i, sending ARP Request for %s on behalf of %s" % (dpid, inport, str(arp_req.protodst), str(arp_req.protosrc)))
     print("Sending ARP Request on behalf of host at IP %s on port %d." % (packet.next.srcip, packet_in.in_port))
 
-def generate_icmp_reply(rt_object, packet, srcip, dstip, icmp_type):
-    p_icmp = icmp()
-    p_icmp.type = icmp_type
+########################################## ICMP functions ##########################################
+def generate_icmp_reply(rt_object, packet, icmp_type):
+"""
+Composes and sends ICMP reply. Only happens if router interface is destination or destination unreachable.
+@param:   rt_object - controller object
+@param:   packet - ethernet packet (in this case, packet.next = arp packet)
+@param:   icmp_type - icmp reply or destinatio unreachable
+"""
+  p_icmp = icmp()
+  p_icmp.type = icmp_type
 
-    if icmp_type == TYPE_ECHO_REPLY:
-      p_icmp.payload = packet.next.next.payload
+  if icmp_type == TYPE_ECHO_REPLY:
+    p_icmp.payload = packet.next.next.payload
 
-    elif icmp_type == TYPE_DEST_UNREACH:
-      #print dir(p.next)
-      ip = packet.find('ipv4')
-      dest_unreach = ip.pack()
-      dest_unreach = dest_unreach[:ip.hl * 4 + 8] # add 'destination unreachable" icmp code 
-      dest_unreach = struct.pack("!HH", 0, 0) + dest_unreach 
-      p_icmp.payload = dest_unreach
+  elif icmp_type == TYPE_DEST_UNREACH:
+    ip = packet.find('ipv4')
+    dest_unreach = ip.pack()
+    dest_unreach = dest_unreach[:ip.hl * 4 + 8] # add 'destination unreachable" icmp code 
+    dest_unreach = struct.pack("!HH", 0, 0) + dest_unreach 
+    p_icmp.payload = dest_unreach
 
-    p_ip = ipv4()
-    p_ip.protocol = p_ip.ICMP_PROTOCOL
-    p_ip.srcip = dstip  
-    p_ip.dstip = srcip
+  ip_packet = ipv4()
+  ip_packet.protocol = ip_packet.ICMP_PROTOCOL
+  ip_packet.srcip = packet.next.dstip  
+  ip_packet.dstip = packet.next.srcip
 
-    e = ethernet()
-    e.src = packet.dst
-    e.dst = packet.src
-    e.type = e.IP_TYPE
-    
-    p_ip.payload = p_icmp
-    e.payload = p_ip
-    
-    msg = of.ofp_packet_out()
-    msg.actions.append(of.ofp_action_output(port = of.OFPP_IN_PORT))
-    msg.data = e.pack()
-    msg.in_port = rt_object.ip_to_port[srcip]
-    rt_object.connection.send(msg)
+  eth_packet = ethernet()
+  eth_packet.src = packet.dst
+  eth_packet.dst = packet.src
+  eth_packet.type = eth_packet.IP_TYPE
+  
+  ip_packet.payload = p_icmp
+  eth_packet.payload = ip_packet
+  
+  msg = of.ofp_packet_out()
+  msg.actions.append(of.ofp_action_output(port = of.OFPP_IN_PORT))
+  msg.data = eth_packet.pack()
+  msg.in_port = rt_object.ip_to_port[packet.next.srcip]
+  rt_object.connection.send(msg)
 
-    print('IP %s pings router at %s, generating icmp reply with code %d...', str(srcip), str(dstip), icmp_type)
+  print('IP %s pings router at %s, generating icmp reply with code %d...', str(srcip), str(dstip), icmp_type)
 
-def is_interface(rt_object, dstip):
-  for subnet in rt_object.routing_table_r1:
-    if(dstip == rt_object.routing_table_r1[subnet]["router_interface"]):
-      return True
-  return False
-
-def validate_ip(rt_object, ip):
-  ip_sub = get_subnet(ip)
-  for subnet in rt_object.routing_table_r1:
-    if ip_sub == subnet:
-      return True
-  return False
-
+########################################## IPV4 functions ##########################################
 def ip_flow_mod(rt_object, packet):
+"""
+Performs IP flow modification and route learning so router does not have to contact controller
+on arrival of every ipv4 packet.
+@param:   rt_object - controller object
+@param:   packet - ethernet packet (in this case, packet.next = arp packet)
+"""
   msg = of.ofp_flow_mod()
   msg.idle_timeout = 3600
   msg.hard_timeout = 7200
@@ -223,6 +243,12 @@ def ip_flow_mod(rt_object, packet):
   rt_object.connection.send(msg)
 
 def ipv4_handler(rt_object, packet, packet_in):
+"""
+Handles all incoming ipv4 packets.
+@param:   rt_object - controller object
+@param:   packet - ethernet packet (in this case, packet.next = arp packet)
+@param:   packet_in - ofp_packet_in object (switch to controller due to table miss)
+"""
   # learn route
   rt_object.ip_to_port[packet.next.srcip] = packet_in.in_port
 
@@ -239,7 +265,7 @@ def ipv4_handler(rt_object, packet, packet_in):
     if(is_interface(rt_object, packet.next.dstip)):
       if isinstance(packet.next.next, icmp):
         if(packet.next.next.type == TYPE_ECHO_REQUEST):
-          generate_icmp_reply(rt_object, packet, packet.next.srcip, packet.next.dstip, TYPE_ECHO_REPLY)
+          generate_icmp_reply(rt_object, packet, TYPE_ECHO_REPLY)
       
     else:
       # if we are waiting for the arp reply to learn the mac address of the next hop
@@ -260,7 +286,6 @@ def ipv4_handler(rt_object, packet, packet_in):
       # we've already received the arp reply, so forward to known destination
       else:
         print("resending packet %s on port %d" % (str(packet.payload), rt_object.ip_to_port[packet.next.dstip])) 
-        # rt_object.resend_packet(packet_in, rt_object.ip_to_port[packet.next.dstip])
         msg = of.ofp_packet_out(buffer_id=packet_in.buffer_id, in_port=packet_in.in_port)
         msg.actions.append(of.ofp_action_dl_addr.set_dst(rt_object.ip_to_mac[packet.next.dstip]))
         msg.actions.append(of.ofp_action_output(port = rt_object.ip_to_port[packet.next.dstip]))
@@ -271,10 +296,16 @@ def ipv4_handler(rt_object, packet, packet_in):
 
   # ip invalid, generate icmp reply dest unreachable
   else:
-    generate_icmp_reply(rt_object, packet, packet.next.srcip, packet.next.dstip, TYPE_DEST_UNREACH)
+    generate_icmp_reply(rt_object, packet, TYPE_DEST_UNREACH)
 
+########################################## MAIN CODE ##########################################
 def router_handler(rt_object, packet, packet_in):
-  print("router_handler(): packet.payload = " + str(packet.payload))
+  """
+Handles all packet coming into switch type 'router.'
+@param:   rt_object - controller object
+@param:   packet - ethernet packet (in this case, packet.next = arp packet)
+@param:   packet_in - ofp_packet_in object (switch to controller due to table miss)
+"""
   # if packet is arp
   if isinstance(packet.next, arp):
     arp_handler(rt_object, packet, packet_in)
