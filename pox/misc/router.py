@@ -75,7 +75,7 @@ def same_subnet(ip1, ip2):
 
 def release_buffer(rt_object, dstip):
   while (len(rt_object.buffer[dstip]) > 0):
-    # print("buffer[%s] = %s" % (dstip, rt_object.buffer[dstip]))
+    print("buffer[%s] = %s" % (dstip, rt_object.buffer[dstip]))
     msg = of.ofp_packet_out(buffer_id=rt_object.buffer[dstip][0]["buffer_id"], in_port=rt_object.buffer[dstip][0]["port"])
     msg.actions.append(of.ofp_action_dl_addr.set_dst(rt_object.ip_to_mac[dstip]))
     msg.actions.append(of.ofp_action_output(port = rt_object.ip_to_port[dstip]))
