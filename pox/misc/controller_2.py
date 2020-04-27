@@ -57,13 +57,14 @@ class Tutorial (object):
     and switches in such a way that your single piece of switch code and router code along with your data structure design
     should work for all the scenarios
     """
-    # TODO: modify all datastructures and functions to take dpid
-
-    # buffer
-    self.buffer = {}
+    # mannage all connections
+    self.connections = {self.dpid: self.connection}
 
     # mac to port table (for in-network switching)
     self.mac_to_port = {}
+
+    # buffer
+    self.buffer = {}
 
     # ip to mac table
     self.ip_to_mac = {}
@@ -77,9 +78,9 @@ class Tutorial (object):
                               '30.0.0.0': {"prefix": 24, 'port': 3, 'router_interface': '30.0.0.1'}}
     
     # replace "r1" with dpid
-    self.routing_table = {"r1": self.routing_table_r1}
+    self.routing_table = {self.dpid: self.routing_table_r1}
 
-  def resend_packet (self, packet_in, out_port):
+  def resend_packet(self, dpid, packet_in, out_port):
     """
     Instructs the switch to resend a packet that it had sent to us.
     "packet_in" is the ofp_packet_in object the switch had sent to the
@@ -93,7 +94,7 @@ class Tutorial (object):
     msg.actions.append(action)
 
     # Send message to switch
-    self.connection.send(msg)
+    self.connections[dpid].send(msg)
     
   def _handle_PacketIn (self, event):
     """
@@ -118,7 +119,7 @@ class Tutorial (object):
     else: (if it is not switch, it means router. We have only two kinds of devices, one is switch and one is router)
       invoke router_handler and pass the object (i.e., self) and the packet and packet_in
     """
-    router_handler(self, packet, packet_in)
+    router_handler(self, self.dpid, packet, packet_in)
 
 def launch ():
   """

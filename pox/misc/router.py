@@ -27,23 +27,23 @@ log = core.getLogger()
       packet_in : The packet_in object that is received from the packet forwarding switch
 """
 # TODO: clean this up (maybe take out functional code and implement where needed?)
-def act_like_switch(sw_object, packet, packet_in):
-  if packet.src not in sw_object.mac_to_port:
+def act_like_switch(sw_object, dpid, packet, packet_in):
+  if packet.src not in sw_object.mac_to_port[dpid]:
     print("ACT_LIKE_SWITCH(): Learning that " + str(packet.src) + " is attached at port " + str(packet_in.in_port))
-    sw_object.mac_to_port[packet.src] = packet_in.in_port
+    sw_object.mac_to_port[dpid][packet.src] = packet_in.in_port
 
   # if the port associated with the destination MAC of the packet is known:
-  if packet.dst in sw_object.mac_to_port:
+  if packet.dst in sw_object.mac_to_port[dpid]:
     # Send packet out the associated port
-    print("ACT_LIKE_SWITCH(): Destination " + str(packet.dst) + " known. Forward msg to port " + str(sw_object.mac_to_port[packet.dst]) + ".")
-    sw_object.resend_packet(packet_in, sw_object.mac_to_port[packet.dst])
+    print("ACT_LIKE_SWITCH(): Destination " + str(packet.dst) + " known. Forward msg to port " + str(sw_object.mac_to_port[dpid][packet.dst]) + ".")
+    sw_object.resend_packet(packet_in, sw_object.mac_to_port[dpid][packet.dst])
 
     # flow mod
-    print("ACT_LIKE_SWITCH(): Installing flow..." + str(sw_object.mac_to_port[packet.dst]))
+    print("ACT_LIKE_SWITCH(): Installing flow..." + str(sw_object.mac_to_port[dpid][packet.dst]))
     msg = of.ofp_flow_mod()
-    msg.match = of.ofp_match.from_packet(packet, sw_object.mac_to_port[packet.dst])
+    msg.match = of.ofp_match.from_packet(packet, sw_object.mac_to_port[dpid][packet.dst])
     msg.match.dl_dst = packet.dst
-    msg.actions.append(of.ofp_action_output(port = sw_object.mac_to_port[packet.dst]))
+    msg.actions.append(of.ofp_action_output(port = sw_object.mac_to_port[dpid][packet.dst]))
     sw_object.connection.send(msg)
     
   # potentially better flow mod
@@ -72,21 +72,21 @@ def get_subnet(ip):
 def same_subnet(ip1, ip2):
   return (get_subnet(ip1) == get_subnet(ip2))
 
-def is_interface(rt_object, dstip):
-  for subnet in rt_object.routing_table_r1:
-    if(dstip == rt_object.routing_table_r1[subnet]["router_interface"]):
+def is_interface(rt_object, dpid, dstip):
+  for subnet in rt_object.routing_table[dpid]:
+    if(dstip == rt_object.routing_table[dpid][subnet]["router_interface"]):
       return True
   return False
 
-def validate_ip(rt_object, ip):
+def validate_ip(rt_object, dpid, ip):
   ip_sub = get_subnet(ip)
-  for subnet in rt_object.routing_table_r1:
+  for subnet in rt_object.routing_table[dpid]:
     if ip_sub == subnet:
       return True
   return False
 
 ########################################## ARP functions ##########################################
-def arp_handler(rt_object, packet, packet_in):
+def arp_handler(rt_object, dpid, packet, packet_in):
   """
   Handles all incoming arp packets.
   @param:   rt_object - controller object
@@ -94,14 +94,14 @@ def arp_handler(rt_object, packet, packet_in):
   @param:   packet_in - ofp_packet_in object (switch to controller due to table miss)
   """
   # learn route
-  rt_object.ip_to_port[packet.next.protosrc] = packet_in.in_port
+  rt_object.ip_to_port[dpid][packet.next.protosrc] = packet_in.in_port
 
-  # check if in rt_object.ip_to_mac, if not add
-  if(packet.payload.protosrc not in rt_object.ip_to_mac):
-    rt_object.ip_to_mac[packet.payload.protosrc] = packet.src
+  # check if in rt_object.ip_to_mac[dpid], if not add
+  if(packet.payload.protosrc not in rt_object.ip_to_mac[dpid]):
+    rt_object.ip_to_mac[dpid][packet.payload.protosrc] = packet.src
   # same with ip_to_port
-  if(packet.payload.protosrc not in rt_object.ip_to_port):
-    rt_object.ip_to_port[packet.payload.protosrc] = packet_in.in_port
+  if(packet.payload.protosrc not in rt_object.ip_to_port[dpid]):
+    rt_object.ip_to_port[dpid][packet.payload.protosrc] = packet_in.in_port
 
   # handle arp request
   # NOTE: this produces the same output. what is going on??
@@ -114,7 +114,7 @@ def arp_handler(rt_object, packet, packet_in):
   
   if packet.next.opcode == arp.REQUEST:
     # if destination ip is the router (default gw), generate arp response
-    if (arp_dst_ip == rt_object.routing_table_r1[get_subnet(packet.payload.protosrc)]["router_interface"]):
+    if (arp_dst_ip == rt_object.routing_table[dpid][get_subnet(packet.payload.protosrc)]["router_interface"]):
       arp_reply = arp()
       arp_reply.opcode = arp.REPLY
       arp_reply.hwsrc = packet.dst #Destination now is the source MAC address
@@ -123,7 +123,7 @@ def arp_handler(rt_object, packet, packet_in):
       arp_reply.protodst= packet.payload.protosrc
       eth = ethernet()
       eth.type = ethernet.ARP_TYPE
-      eth.dst = rt_object.ip_to_mac[packet.payload.protosrc]
+      eth.dst = rt_object.ip_to_mac[dpid][packet.payload.protosrc]
       eth.src = packet.dst
       eth.payload = arp_reply
       msg = of.ofp_packet_out()
@@ -132,15 +132,15 @@ def arp_handler(rt_object, packet, packet_in):
       msg.actions.append(action)
 
       # DEBUG
-      print("ARP_HANDLER(): Generate ARP Reply: answering MAC %s on port %d" % (rt_object.ip_to_mac[packet.payload.protosrc], packet_in.in_port))
+      print("ARP_HANDLER(): Generate ARP Reply: answering MAC %s on port %d" % (rt_object.ip_to_mac[dpid][packet.payload.protosrc], packet_in.in_port))
       rt_object.connection.send(msg)
 
     # if destination ip (packet.payload.protodst) is on same network and this network 
     # (longest prefix match) --> act like switch
-    # if same_subnet(arp_dst_ip, arp_src_ip) and is_in_local_routing_table(get_subnet(arp_dst_ip), rt_object.routing_table_r1):
+    # if same_subnet(arp_dst_ip, arp_src_ip) and is_in_local_routing_table(get_subnet(arp_dst_ip), rt_object.routing_table[dpid]):
     elif same_subnet(arp_dst_ip, arp_src_ip):
       print("ARP_HANDLER(): src ip: %s and dst ip: %s in same network." % (arp_src_ip, arp_dst_ip))
-      act_like_switch(rt_object, packet, packet_in)
+      act_like_switch(rt_object, dpid, packet, packet_in)
     
     # DEBUG
     else:
@@ -152,7 +152,7 @@ def arp_handler(rt_object, packet, packet_in):
     print("ARP_HANDLER(): Received ARP reply... learn source MAC Addr and release ip buffer.")
     
     # Learn source MAC addr of sender (next hop)
-    rt_object.ip_to_mac[packet.payload.protosrc] = packet.next.hwsrc 
+    rt_object.ip_to_mac[dpid][packet.payload.protosrc] = packet.next.hwsrc 
 
     # release buffer
     release_buffer(rt_object, packet.payload.protosrc)
@@ -221,7 +221,7 @@ def generate_icmp_reply(rt_object, packet, icmp_type):
   msg = of.ofp_packet_out()
   msg.actions.append(of.ofp_action_output(port = of.OFPP_IN_PORT))
   msg.data = eth_packet.pack()
-  msg.in_port = rt_object.ip_to_port[packet.next.srcip]
+  msg.in_port = rt_object.ip_to_port[dpid][packet.next.srcip]
   rt_object.connection.send(msg)
 
   # DEBUG
@@ -241,12 +241,12 @@ def ip_flow_mod(rt_object, packet):
   msg.priority = 1000 # set priority to highest
   msg.match.dl_type = 0x800 # type: ip
   msg.match.nw_dst = packet.next.dstip
-  msg.actions.append( of.ofp_action_dl_addr.set_dst(rt_object.ip_to_mac[packet.next.dstip]) )
-  msg.actions.append( of.ofp_action_output(port = rt_object.ip_to_port[packet.next.dstip]) )
+  msg.actions.append( of.ofp_action_dl_addr.set_dst(rt_object.ip_to_mac[dpid][packet.next.dstip]) )
+  msg.actions.append( of.ofp_action_output(port = rt_object.ip_to_port[dpid][packet.next.dstip]) )
   rt_object.connection.send(msg)
 
   # DEBUG
-  print("IP_FLOW_MOD(): Learning IP %s corresponds to MAC %s on PORT %d." % (str(packet.next.dstip), str(rt_object.ip_to_mac[packet.next.dstip]), rt_object.ip_to_port[packet.next.dstip]))
+  print("IP_FLOW_MOD(): Learning IP %s corresponds to MAC %s on PORT %d." % (str(packet.next.dstip), str(rt_object.ip_to_mac[dpid][packet.next.dstip]), rt_object.ip_to_port[dpid][packet.next.dstip]))
 
 def send_ip_packet(rt_object, buf_id, inport, dstip):
   """
@@ -257,12 +257,12 @@ def send_ip_packet(rt_object, buf_id, inport, dstip):
   @param:   dstip - destination ip
   """
   msg = of.ofp_packet_out(buffer_id=buf_id, in_port=inport)
-  msg.actions.append(of.ofp_action_dl_addr.set_dst(rt_object.ip_to_mac[dstip]))
-  msg.actions.append(of.ofp_action_output(port = rt_object.ip_to_port[dstip]))
+  msg.actions.append(of.ofp_action_dl_addr.set_dst(rt_object.ip_to_mac[dpid][dstip]))
+  msg.actions.append(of.ofp_action_output(port = rt_object.ip_to_port[dpid][dstip]))
   rt_object.connection.send(msg)
 
   # DEBUG
-  print("SEND_IP_PACKET(): Sending BUFFER_ID %d from IN_PORT %d to IP %s at MAC %s on OUT_PORT %d." % (buf_id, inport, str(dstip), str(rt_object.ip_to_mac[dstip]), rt_object.ip_to_port[dstip]))
+  print("SEND_IP_PACKET(): Sending BUFFER_ID %d from IN_PORT %d to IP %s at MAC %s on OUT_PORT %d." % (buf_id, inport, str(dstip), str(rt_object.ip_to_mac[dpid][dstip]), rt_object.ip_to_port[dpid][dstip]))
 
 def release_buffer(rt_object, dstip):
   """
@@ -270,12 +270,12 @@ def release_buffer(rt_object, dstip):
   @param:   rt_object - controller object
   @param:   dstip - destination ip
   """
-  while (len(rt_object.buffer[dstip]) > 0):
-    send_ip_packet(rt_object, rt_object.buffer[dstip][0]["buffer_id"], rt_object.buffer[dstip][0]["port"], dstip)
-    del rt_object.buffer[dstip][0]
+  while (len(rt_object.buffer[dpid][dstip]) > 0):
+    send_ip_packet(rt_object, rt_object.buffer[dpid][dstip][0]["buffer_id"], rt_object.buffer[dpid][dstip][0]["port"], dstip)
+    del rt_object.buffer[dpid][dstip][0]
   
   # DEBUG
-  # print("RELEASE_BUFFER(): buffer[%s] = %s" % (dstip, rt_object.buffer[dstip]))
+  # print("RELEASE_BUFFER(): buffer[%s] = %s" % (dstip, rt_object.buffer[dpid][dstip]))
   print("RELEASE_BUFFER(): Not logging right now. Uncomment above to get more info.")
 
 def ipv4_handler(rt_object, packet, packet_in):
@@ -286,7 +286,7 @@ def ipv4_handler(rt_object, packet, packet_in):
   @param:   packet_in - ofp_packet_in object (switch to controller due to table miss)
   """
   # learn route
-  rt_object.ip_to_port[packet.next.srcip] = packet_in.in_port
+  rt_object.ip_to_port[dpid][packet.next.srcip] = packet_in.in_port
 
   print("IPV4_HANDLER(): packet.srcip = " + str(packet.next.srcip))
   print("IPV4_HANDLER(): packet.dstip = " + str(packet.next.dstip))
@@ -294,9 +294,9 @@ def ipv4_handler(rt_object, packet, packet_in):
 
   # if destination ip is valid (in routing table or one of routers)
   # if ip_in_table(rt_object, packet, packet_in): # FIX THIS!!!
-  if validate_ip(rt_object, packet.next.dstip):
+  if validate_ip(rt_object, dpid, packet.next.dstip):
     # if packet meant for THIS router
-    if(is_interface(rt_object, packet.next.dstip)):
+    if(is_interface(rt_object, dpid, packet.next.dstip)):
       if isinstance(packet.next.next, icmp):
         if(packet.next.next.type == TYPE_ECHO_REQUEST):
           generate_icmp_reply(rt_object, packet, TYPE_ECHO_REPLY)
@@ -304,14 +304,14 @@ def ipv4_handler(rt_object, packet, packet_in):
     else:
       # if we are waiting for the arp reply to learn the mac address of the next hop
       # cache this packet
-      if packet.next.dstip not in rt_object.ip_to_mac or packet.next.dstip not in rt_object.ip_to_port:
+      if packet.next.dstip not in rt_object.ip_to_mac[dpid] or packet.next.dstip not in rt_object.ip_to_port[dpid]:
         # add a new buffer for this dstip if it does not already exist
-        if packet.next.dstip not in rt_object.buffer:
-          rt_object.buffer[packet.next.dstip] = []
+        if packet.next.dstip not in rt_object.buffer[dpid]:
+          rt_object.buffer[dpid][packet.next.dstip] = []
 
         # cache packet
         buffer_entry = {"buffer_id": packet_in.buffer_id, "port": packet_in.in_port}
-        rt_object.buffer[packet.next.dstip].append(buffer_entry)
+        rt_object.buffer[dpid][packet.next.dstip].append(buffer_entry)
         print("IPV4_HANDLER(): Destination: %s unknown. Buffer packet: %s" % (packet.next.dstip, packet_in.buffer_id))
 
         # generate arp request to learn next hop
@@ -319,7 +319,7 @@ def ipv4_handler(rt_object, packet, packet_in):
   
       # we've already received the arp reply, so forward to known destination
       else:
-        print("IPV4_HANDLER(): Sending packet %s out PORT %d" % (str(packet.payload), rt_object.ip_to_port[packet.next.dstip]))
+        print("IPV4_HANDLER(): Sending packet %s out PORT %d" % (str(packet.payload), rt_object.ip_to_port[dpid][packet.next.dstip]))
         send_ip_packet(rt_object, packet_in.buffer_id, packet_in.in_port, packet.next.dstip) 
 
         # flow mod
@@ -339,7 +339,7 @@ def router_handler(rt_object, packet, packet_in):
   """
   # if packet is arp
   if isinstance(packet.next, arp):
-    arp_handler(rt_object, packet, packet_in)
+    arp_handler(rt_object, dpid, packet, packet_in)
 
   # else --> act like router 
   elif isinstance(packet.next, ipv4):
