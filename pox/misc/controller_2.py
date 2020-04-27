@@ -31,6 +31,8 @@ from pox.lib.util import dpid_to_str
 
 log = core.getLogger()
 
+# openflow_objects = {}
+
 class Tutorial (object):
   """
   A Tutorial object is created for each switch that connects.
@@ -62,15 +64,19 @@ class Tutorial (object):
 
     # mac to port table (for in-network switching)
     self.mac_to_port = {}
+    self.mac_to_port[self.dpid] = {}
 
     # buffer
     self.buffer = {}
+    self.buffer[self.dpid] = {}
 
     # ip to mac table
     self.ip_to_mac = {}
+    self.ip_to_mac[self.dpid] = {}
     
     # ip to port table
     self.ip_to_port = {}
+    self.ip_to_port[self.dpid] = {}
 
     # self.routing_table = {""" fill with routing table """}
     self.routing_table_r1 = { "10.0.0.0": {"prefix": 24, "port": 1, "router_interface": "10.0.0.1"},
@@ -79,6 +85,8 @@ class Tutorial (object):
     
     # replace "r1" with dpid
     self.routing_table = {self.dpid: self.routing_table_r1}
+
+    # openflow_objects[dpid] = self
 
   def resend_packet(self, dpid, packet_in, out_port):
     """
