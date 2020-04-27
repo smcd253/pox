@@ -162,25 +162,25 @@ def generate_arp_request(rt_object, packet, packet_in):
   @param:   packet - ethernet packet (in this case, packet.next = arp packet)
   @param:   packet_in - ofp_packet_in object (switch to controller due to table miss)
   """
-    arp_req = arp()
-    arp_req.hwtype = arp_req.HW_TYPE_ETHERNET
-    arp_req.prototype = arp_req.PROTO_TYPE_IP
-    arp_req.hwlen = 6
-    arp_req.protolen = arp_req.protolen
-    arp_req.opcode = arp_req.REQUEST
-    arp_req.hwdst = ETHER_BROADCAST
-    arp_req.protodst = packet.next.dstip
-    arp_req.hwsrc = packet.src 
-    arp_req.protosrc = packet.next.srcip
-    eth = ethernet(type=ethernet.ARP_TYPE, src=packet.src, dst=ETHER_BROADCAST)
-    eth.set_payload(arp_req)
-    msg = of.ofp_packet_out()
-    msg.data = eth.pack()
-    msg.actions.append(of.ofp_action_output(port = of.OFPP_FLOOD))
-    msg.in_port = packet_in.in_port
-    rt_object.connection.send(msg)
+  arp_req = arp()
+  arp_req.hwtype = arp_req.HW_TYPE_ETHERNET
+  arp_req.prototype = arp_req.PROTO_TYPE_IP
+  arp_req.hwlen = 6
+  arp_req.protolen = arp_req.protolen
+  arp_req.opcode = arp_req.REQUEST
+  arp_req.hwdst = ETHER_BROADCAST
+  arp_req.protodst = packet.next.dstip
+  arp_req.hwsrc = packet.src 
+  arp_req.protosrc = packet.next.srcip
+  eth = ethernet(type=ethernet.ARP_TYPE, src=packet.src, dst=ETHER_BROADCAST)
+  eth.set_payload(arp_req)
+  msg = of.ofp_packet_out()
+  msg.data = eth.pack()
+  msg.actions.append(of.ofp_action_output(port = of.OFPP_FLOOD))
+  msg.in_port = packet_in.in_port
+  rt_object.connection.send(msg)
 
-    print("Sending ARP Request on behalf of host at IP %s on port %d." % (packet.next.srcip, packet_in.in_port))
+  print("Sending ARP Request on behalf of host at IP %s on port %d." % (packet.next.srcip, packet_in.in_port))
 
 ########################################## ICMP functions ##########################################
 def generate_icmp_reply(rt_object, packet, icmp_type):
