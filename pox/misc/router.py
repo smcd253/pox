@@ -175,9 +175,9 @@ def generate_icmp_reply(rt_object, packet, srcip, dstip, icmp_type):
     p_icmp = icmp()
     p_icmp.type = icmp_type
 
-    if icmp_type == pkt.TYPE_ECHO_REPLY:
+    if icmp_type == TYPE_ECHO_REPLY:
       p_icmp.payload = p.find('icmp').payload
-    elif icmp_type == pkt.TYPE_DEST_UNREACH:
+    elif icmp_type == TYPE_DEST_UNREACH:
       #print dir(p.next)
       orig_ip = packet.find('ipv4')
       d = orig_ip.pack()
