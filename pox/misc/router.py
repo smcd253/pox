@@ -259,7 +259,8 @@ def ipv4_handler(rt_object, packet, packet_in):
         generate_arp_request(rt_object, packet, packet_in)
   
       # we've already received the arp reply, so forward to known destination
-      else: 
+      else:
+        print("resending packet %s on port") 
         rt_object.resend_packet(packet_in, rt_object.ip_to_port[packet.next.dstip])
 
   # ip invalid, generate icmp reply dest unreachable
@@ -267,6 +268,7 @@ def ipv4_handler(rt_object, packet, packet_in):
     generate_icmp_reply(rt_object, packet, packet.next.srcip, packet.next.dstip, TYPE_DEST_UNREACH)
 
 def router_handler(rt_object, packet, packet_in):
+  print("router_handler(): packet.payload = " + str(packet.payload))
   # if packet is arp
   if isinstance(packet.next, arp):
     arp_handler(rt_object, packet, packet_in)
