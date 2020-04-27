@@ -88,17 +88,17 @@ class Tutorial (object):
     Creates relevant data structures for newly connected switch.
     @param: event - switch connection event
     """
-    dpid = event.connection.dpid
+    dpid = dpid_to_str(event.connection.dpid)
     if dpid not in self.connections:
       self.connections[dpid] = event.connection
     if dpid not in self.mac_to_port:
-      self.mac_to_port[self.dpid] = {}
+      self.mac_to_port[dpid] = {}
     if dpid not in self.buffer:
-      self.buffer[self.dpid] = {}
+      self.buffer[dpid] = {}
     if dpid not in self.ip_to_mac:
-      self.ip_to_mac[self.dpid] = {}
+      self.ip_to_mac[dpid] = {}
     if dpid not in self.ip_to_port:
-      self.ip_to_port[self.dpid] = {}
+      self.ip_to_port[dpid] = {}
 
   def resend_packet(self, dpid, packet_in, out_port):
     """
