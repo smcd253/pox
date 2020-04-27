@@ -171,6 +171,37 @@ def generate_arp_request(rt_object, packet, packet_in):
     # log.debug("DPID %i, INPORT %i, sending ARP Request for %s on behalf of %s" % (dpid, inport, str(arp_req.protodst), str(arp_req.protosrc)))
     print("Sending ARP Request on behalf of host at IP %s on port %d." % (packet.next.srcip, packet_in.in_port))
 
+def generate_icmp_reply(rt_object, packet, srcip, dstip, icmp_type):
+  p_icmp = icmp()
+  p_icmp.type = icmp_type
+  
+  p_ip = ipv4()
+  p_ip.protocol = p_ip.ICMP_PROTOCOL
+  p_ip.srcip = dstip  
+  p_ip.dstip = srcip
+
+  e = ethernet()
+  e.src = packet.dst
+  e.dst = packet.src
+  e.type = e.IP_TYPE
+  
+  p_ip.payload = p_icmp
+  e.payload = p_ip
+  
+  msg = of.ofp_packet_out()
+  msg.actions.append(of.ofp_action_output(port = of.OFPP_IN_PORT))
+  msg.data = e.pack()
+  msg.in_port = rt_object.ip_to_port[srcip]
+  rt_object.connections.send(msg)
+
+  print('IP %s pings router at %s, generating icmp reply with code %d...', str(srcip), str(dstip), icmp_type)
+
+def is_interface(rt_object, dstip):
+  for subnet in rt_object.routing_table_r1:
+    if(dstip == rt_object.routing_table_r1[subnet]["router_interface"]):
+      return True
+  return False
+
 def ipv4_handler(rt_object, packet, packet_in):
   # learn route
   rt_object.ip_to_port[packet.next.srcip] = packet_in.in_port
@@ -185,7 +216,12 @@ def ipv4_handler(rt_object, packet, packet_in):
   valid_ip = True
   if valid_ip:
     # TODO: implement icmp reply for destination = router
-    # if packet meant for THIS router
+    if isinstance(packet.next.next, icmp):
+      # if packet meant for THIS router
+      if(is_interface(packet.next.dstip)):
+        if(packet.next.next.type == TYPE_ECHO_REQUEST):
+          generate_icmp_reply(rt_object, packet, packet.next.srcip, packet.next.dstip, TYPE_ECHO_REPLY)
+        
       # if icmp packet and type == request
       # if isinstance(packet.next.next, icmp):
 
@@ -226,16 +262,3 @@ def router_handler(rt_object, packet, packet_in):
   elif isinstance(packet.next, ipv4):
     ipv4_handler(rt_object, packet, packet_in)
 
-  # Step 2: ICMP Request (from source) (if packet is icmp request or reply)
-  # if destination ip is in THIS routing table --> make arp request
-    # arp request to destination ip (packet.payload.dst)
-  # else
-    # broadcast arp request
-  # else:
- 
-  
-  
-  
-  # Step 3: Arp Reply 
-  # if reply successful --> forward ICMP request
-  # else --> tell source (destination unreachable)
