@@ -262,11 +262,11 @@ def ipv4_handler(rt_object, packet, packet_in):
       else:
         print("resending packet %s on port %d" % (str(packet.payload), rt_object.ip_to_port[packet.next.dstip])) 
         # rt_object.resend_packet(packet_in, rt_object.ip_to_port[packet.next.dstip])
-        msg = of.ofp_packet_out(buffer_id=packet_in.buffer_id, in_port=inport)
+        msg = of.ofp_packet_out(buffer_id=packet_in.buffer_id, in_port=packet_in.in_port)
         msg.actions.append(of.ofp_action_dl_addr.set_dst(rt_object.ip_to_mac[packet.next.dstip]))
         msg.actions.append(of.ofp_action_output(port = rt_object.ip_to_port[packet.next.dstip]))
         self.connection.send(msg)
-        
+
   # ip invalid, generate icmp reply dest unreachable
   else:
     generate_icmp_reply(rt_object, packet, packet.next.srcip, packet.next.dstip, TYPE_DEST_UNREACH)
