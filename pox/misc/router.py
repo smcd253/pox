@@ -64,13 +64,42 @@ def act_like_switch(sw_object, dpid, packet, packet_in):
     sw_object.resend_packet(packet_in, of.OFPP_ALL)
 
 ########################################## IP parsing functions ##########################################
-def get_subnet(ip):
-  s = str(ip)
-  (a,b,c,d) = s.split('.')
-  return a+"."+b+"."+c+"."+"0"
+#return netwrok addr as a string
+def LPM(mask, ip):
+    x=0
+    ip_bin=0
+    while x <= 3:
+        temp = ip.split(".")[x]
+        temp_int= int(temp)<<(24-x*8)
+        ip_bin=temp_int+ip_bin
+        x=x+1
+    temp_dec= math.pow(2,int(mask))
+    temp_dec = int(temp_dec-1)
+    temp_bin = temp_dec<<(32-int(mask))
+    result_bin = temp_bin & ip_bin
+    first = result_bin>>24
+    second = result_bin & 16711680
+    second = second>>16
+    third = result_bin & 65280
+    third = third>>8
+    fourth = result_bin & 255
+    key = str(first)+"."+str(second)+"."+str(third)+"."+str(fourth)
+    return key
 
-def same_subnet(ip1, ip2):
-  return (get_subnet(ip1) == get_subnet(ip2))
+def get_subnet(rt_object, dpid, ip):
+  mask = 32
+  match = ""
+  while match not in rt_object.routing_table[dpid] and mask > 0:
+    match = LPM(mask, ip)
+    mask -= 1
+  return match
+  # s = str(ip)
+  # (a,b,c,d) = s.split('.')
+  # return a+"."+b+"."+c+"."+"0"
+
+
+def same_subnet(rt_object, dpid, ip1, ip2):
+  return (get_subnet(rt_object, dpid, ip1) == get_subnet(rt_object, dpid, ip2))
 
 def is_interface(rt_object, dpid, dstip):
   for subnet in rt_object.routing_table[dpid]:
@@ -79,7 +108,7 @@ def is_interface(rt_object, dpid, dstip):
   return False
 
 def validate_ip(rt_object, dpid, ip):
-  ip_sub = get_subnet(ip)
+  ip_sub = get_subnet(rt_object, dpid, ip)
   for subnet in rt_object.routing_table[dpid]:
     if ip_sub == subnet:
       return True
@@ -114,7 +143,7 @@ def arp_handler(rt_object, dpid, packet, packet_in):
   
   if packet.next.opcode == arp.REQUEST:
     # if destination ip is the router (default gw), generate arp response
-    if (arp_dst_ip == rt_object.routing_table[dpid][get_subnet(packet.payload.protosrc)]["router_interface"]):
+    if (arp_dst_ip == rt_object.routing_table[dpid][get_subnet(rt_object, dpid, packet.payload.protosrc)]["router_interface"]):
       arp_reply = arp()
       arp_reply.opcode = arp.REPLY
       arp_reply.hwsrc = packet.dst #Destination now is the source MAC address
@@ -137,8 +166,8 @@ def arp_handler(rt_object, dpid, packet, packet_in):
 
     # if destination ip (packet.payload.protodst) is on same network and this network 
     # (longest prefix match) --> act like switch
-    # if same_subnet(arp_dst_ip, arp_src_ip) and is_in_local_routing_table(get_subnet(arp_dst_ip), rt_object.routing_table[dpid]):
-    elif same_subnet(arp_dst_ip, arp_src_ip):
+    # if same_subnet(rt_object, dpid, arp_dst_ip, arp_src_ip) and is_in_local_routing_table(get_subnet(rt_object, dpid, arp_dst_ip), rt_object.routing_table[dpid]):
+    elif same_subnet(rt_object, dpid, arp_dst_ip, arp_src_ip):
       print("ARP_HANDLER(): src ip: %s and dst ip: %s in same network." % (arp_src_ip, arp_dst_ip))
       act_like_switch(rt_object, dpid, packet, packet_in)
     

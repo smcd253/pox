@@ -31,8 +31,6 @@ from pox.lib.util import dpid_to_str
 
 log = core.getLogger()
 
-# openflow_objects = {}
-
 class Tutorial (object):
   """
   A Tutorial object is created for each switch that connects.
@@ -80,8 +78,6 @@ class Tutorial (object):
                               '30.0.0.0': {"prefix": 24, 'port': 3, 'router_interface': '30.0.0.1'}}
     
     self.routing_table = {self.dpid: self.routing_table_r1}
-
-    # openflow_objects[dpid] = self
 
   def add_new_switch(self, event):
     """
