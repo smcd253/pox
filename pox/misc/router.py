@@ -174,7 +174,17 @@ def generate_arp_request(rt_object, packet, packet_in):
 def generate_icmp_reply(rt_object, packet, srcip, dstip, icmp_type):
     p_icmp = icmp()
     p_icmp.type = icmp_type
-    
+
+    if icmp_type == pkt.TYPE_ECHO_REPLY:
+      p_icmp.payload = p.find('icmp').payload
+    elif icmp_type == pkt.TYPE_DEST_UNREACH:
+      #print dir(p.next)
+      orig_ip = packet.find('ipv4')
+      d = orig_ip.pack()
+      d = d[:orig_ip.hl * 4 + 8]
+      d = struct.pack("!HH", 0, 0) + d # network, unsigned short, unsigned short
+      p_icmp.payload = d
+
     p_ip = ipv4()
     p_ip.protocol = p_ip.ICMP_PROTOCOL
     p_ip.srcip = dstip  
