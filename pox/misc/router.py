@@ -176,16 +176,15 @@ def generate_icmp_reply(rt_object, packet, srcip, dstip, icmp_type):
     p_icmp.type = icmp_type
 
     if icmp_type == TYPE_ECHO_REPLY:
-      # p_icmp.payload = packet.find('icmp').payload
-      # p_icmp.payload = packet.next.payload
       p_icmp.payload = packet.next.next.payload
+
     elif icmp_type == TYPE_DEST_UNREACH:
       #print dir(p.next)
-      orig_ip = packet.find('ipv4')
-      d = orig_ip.pack()
-      d = d[:orig_ip.hl * 4 + 8]
-      d = struct.pack("!HH", 0, 0) + d # network, unsigned short, unsigned short
-      p_icmp.payload = d
+      ip = packet.find('ipv4')
+      dest_unreach = ip.pack()
+      dest_unreach = dest_unreach[:ip.hl * 4 + 8] # add 'destination unreachable" icmp code 
+      dest_unreach = struct.pack("!HH", 0, 0) + dest_unreach 
+      p_icmp.payload = dest_unreach
 
     p_ip = ipv4()
     p_ip.protocol = p_ip.ICMP_PROTOCOL
@@ -214,6 +213,13 @@ def is_interface(rt_object, dstip):
       return True
   return False
 
+def validate_ip(rt_object, ip):
+  ip_sub = get_subnet(ip)
+  for subnet in rt_object.routing_table_r1:
+    if ip_sub == subnet:
+      return True
+  return False
+
 def ipv4_handler(rt_object, packet, packet_in):
   # learn route
   rt_object.ip_to_port[packet.next.srcip] = packet_in.in_port
@@ -226,9 +232,9 @@ def ipv4_handler(rt_object, packet, packet_in):
   # if destination ip is valid (in routing table or one of routers)
   # if ip_in_table(rt_object, packet, packet_in): # FIX THIS!!!
   valid_ip = True
-  if valid_ip:
+  if validate_ip(rt_object, packet.next.dstip):
     # if packet meant for THIS router
-    if(is_interface(rt_object,packet.next.dstip)):
+    if(is_interface(rt_object, packet.next.dstip)):
       if isinstance(packet.next.next, icmp):
         if(packet.next.next.type == TYPE_ECHO_REQUEST):
           generate_icmp_reply(rt_object, packet, packet.next.srcip, packet.next.dstip, TYPE_ECHO_REPLY)
@@ -255,8 +261,7 @@ def ipv4_handler(rt_object, packet, packet_in):
 
   # ip invalid, generate icmp reply dest unreachable
   else:
-    # generate icmp reply (dest unreachable)
-    return
+    generate_icmp_reply(rt_object, packet, packet.next.srcip, packet.next.dstip, TYPE_DEST_UNREACH)
 
 def router_handler(rt_object, packet, packet_in):
   # if packet is arp
