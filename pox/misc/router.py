@@ -215,38 +215,31 @@ def ipv4_handler(rt_object, packet, packet_in):
   # if ip_in_table(rt_object, packet, packet_in): # FIX THIS!!!
   valid_ip = True
   if valid_ip:
-    # TODO: implement icmp reply for destination = router
-    if isinstance(packet.next.next, icmp):
-      # if packet meant for THIS router
-      if(is_interface(rt_object,packet.next.dstip)):
+    # if packet meant for THIS router
+    if(is_interface(rt_object,packet.next.dstip)):
+      if isinstance(packet.next.next, icmp):
         if(packet.next.next.type == TYPE_ECHO_REQUEST):
           generate_icmp_reply(rt_object, packet, packet.next.srcip, packet.next.dstip, TYPE_ECHO_REPLY)
-        
-      # if icmp packet and type == request
-      # if isinstance(packet.next.next, icmp):
+      
+    else:
+      # if we are waiting for the arp reply to learn the mac address of the next hop
+      # cache this packet
+      if packet.next.dstip not in rt_object.ip_to_mac:
+        # add a new buffer for this dstip if it does not already exist
+        if packet.next.dstip not in rt_object.buffer:
+          rt_object.buffer[packet.next.dstip] = []
 
-        # generate icmp reply
-    # else (packet meant for someone else)
+        # cache packet
+        buffer_entry = {"buffer_id": packet_in.buffer_id, "port": packet_in.in_port}
+        rt_object.buffer[packet.next.dstip].append(buffer_entry)
+        print("Destination: %s unknown. Buffer packet: %s" % (packet.next.dstip, packet_in.buffer_id))
 
-    # INDENT EVERYTHING UNDER HEAR!
-    # if we are waiting for the arp reply to learn the mac address of the next hop
-    # cache this packet
-    if packet.next.dstip not in rt_object.ip_to_mac:
-      # add a new buffer for this dstip if it does not already exist
-      if packet.next.dstip not in rt_object.buffer:
-        rt_object.buffer[packet.next.dstip] = []
-
-      # cache packet
-      buffer_entry = {"buffer_id": packet_in.buffer_id, "port": packet_in.in_port}
-      rt_object.buffer[packet.next.dstip].append(buffer_entry)
-      print("Destination: %s unknown. Buffer packet: %s" % (packet.next.dstip, packet_in.buffer_id))
-
-      # generate arp request to learn next hop
-      generate_arp_request(rt_object, packet, packet_in)
-    
-    # we've already received the arp reply, so forward to known destination
-    else: 
-      rt_object.resend_packet(packet_in, rt_object.ip_to_port[packet.next.dstip])
+        # generate arp request to learn next hop
+        generate_arp_request(rt_object, packet, packet_in)
+  
+      # we've already received the arp reply, so forward to known destination
+      else: 
+        rt_object.resend_packet(packet_in, rt_object.ip_to_port[packet.next.dstip])
 
   # ip invalid, generate icmp reply dest unreachable
   else:
