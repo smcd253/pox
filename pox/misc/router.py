@@ -87,12 +87,12 @@ def release_buffer(rt_object, dstip):
 
 ########################################## ARP functions ##########################################
 def arp_handler(rt_object, packet, packet_in):
-"""
-Handles all incoming arp packets.
-@param:   rt_object - controller object
-@param:   packet - ethernet packet (in this case, packet.next = arp packet)
-@param:   packet_in - ofp_packet_in object (switch to controller due to table miss)
-"""
+  """
+  Handles all incoming arp packets.
+  @param:   rt_object - controller object
+  @param:   packet - ethernet packet (in this case, packet.next = arp packet)
+  @param:   packet_in - ofp_packet_in object (switch to controller due to table miss)
+  """
   # learn route
   rt_object.ip_to_port[packet.next.protosrc] = packet_in.in_port
 
@@ -156,12 +156,12 @@ Handles all incoming arp packets.
     release_buffer(rt_object, packet.payload.protosrc)
 
 def generate_arp_request(rt_object, packet, packet_in):
-"""
-Composes and sends arp request.
-@param:   rt_object - controller object
-@param:   packet - ethernet packet (in this case, packet.next = arp packet)
-@param:   packet_in - ofp_packet_in object (switch to controller due to table miss)
-"""
+  """
+  Composes and sends arp request.
+  @param:   rt_object - controller object
+  @param:   packet - ethernet packet (in this case, packet.next = arp packet)
+  @param:   packet_in - ofp_packet_in object (switch to controller due to table miss)
+  """
     arp_req = arp()
     arp_req.hwtype = arp_req.HW_TYPE_ETHERNET
     arp_req.prototype = arp_req.PROTO_TYPE_IP
@@ -184,12 +184,12 @@ Composes and sends arp request.
 
 ########################################## ICMP functions ##########################################
 def generate_icmp_reply(rt_object, packet, icmp_type):
-"""
-Composes and sends ICMP reply. Only happens if router interface is destination or destination unreachable.
-@param:   rt_object - controller object
-@param:   packet - ethernet packet (in this case, packet.next = arp packet)
-@param:   icmp_type - icmp reply or destinatio unreachable
-"""
+  """
+  Composes and sends ICMP reply. Only happens if router interface is destination or destination unreachable.
+  @param:   rt_object - controller object
+  @param:   packet - ethernet packet (in this case, packet.next = arp packet)
+  @param:   icmp_type - icmp reply or destinatio unreachable
+  """
   p_icmp = icmp()
   p_icmp.type = icmp_type
 
@@ -226,12 +226,12 @@ Composes and sends ICMP reply. Only happens if router interface is destination o
 
 ########################################## IPV4 functions ##########################################
 def ip_flow_mod(rt_object, packet):
-"""
-Performs IP flow modification and route learning so router does not have to contact controller
-on arrival of every ipv4 packet.
-@param:   rt_object - controller object
-@param:   packet - ethernet packet (in this case, packet.next = arp packet)
-"""
+  """
+  Performs IP flow modification and route learning so router does not have to contact controller
+  on arrival of every ipv4 packet.
+  @param:   rt_object - controller object
+  @param:   packet - ethernet packet (in this case, packet.next = arp packet)
+  """
   msg = of.ofp_flow_mod()
   msg.idle_timeout = 3600
   msg.hard_timeout = 7200
@@ -243,12 +243,12 @@ on arrival of every ipv4 packet.
   rt_object.connection.send(msg)
 
 def ipv4_handler(rt_object, packet, packet_in):
-"""
-Handles all incoming ipv4 packets.
-@param:   rt_object - controller object
-@param:   packet - ethernet packet (in this case, packet.next = arp packet)
-@param:   packet_in - ofp_packet_in object (switch to controller due to table miss)
-"""
+  """
+  Handles all incoming ipv4 packets.
+  @param:   rt_object - controller object
+  @param:   packet - ethernet packet (in this case, packet.next = arp packet)
+  @param:   packet_in - ofp_packet_in object (switch to controller due to table miss)
+  """
   # learn route
   rt_object.ip_to_port[packet.next.srcip] = packet_in.in_port
 
@@ -301,11 +301,11 @@ Handles all incoming ipv4 packets.
 ########################################## MAIN CODE ##########################################
 def router_handler(rt_object, packet, packet_in):
   """
-Handles all packet coming into switch type 'router.'
-@param:   rt_object - controller object
-@param:   packet - ethernet packet (in this case, packet.next = arp packet)
-@param:   packet_in - ofp_packet_in object (switch to controller due to table miss)
-"""
+  Handles all packet coming into switch type 'router.'
+  @param:   rt_object - controller object
+  @param:   packet - ethernet packet (in this case, packet.next = arp packet)
+  @param:   packet_in - ofp_packet_in object (switch to controller due to table miss)
+  """
   # if packet is arp
   if isinstance(packet.next, arp):
     arp_handler(rt_object, packet, packet_in)
