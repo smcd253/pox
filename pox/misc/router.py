@@ -250,7 +250,7 @@ def send_ip_packet(rt_object, buf_id, inport, dstip):
   rt_object.connection.send(msg)
 
   # DEBUG
-  print("SEND_IP_PACKET(): Sending BUFFER_ID %d from IN_PORT %d to IP %s at MAC %s on OUT_PORT %d." % (buf_id, inport, str(dstip), str(rt_object.ip_to_mac[dstip]), str(rt_object.ip_to_port[dstip])))
+  print("SEND_IP_PACKET(): Sending BUFFER_ID %d from IN_PORT %d to IP %s at MAC %s on OUT_PORT %d." % (buf_id, inport, str(dstip), str(rt_object.ip_to_mac[dstip]), rt_object.ip_to_port[dstip]))
 
 def release_buffer(rt_object, dstip):
   """
