@@ -42,6 +42,18 @@ def switch_handler(sw_object, packet, packet_in):
     msg.actions.append(of.ofp_action_output(port = sw_object.mac_to_port[packet.dst]))
     sw_object.connection.send(msg)
 
+  # potentially better flow mod
+  # msg = of.ofp_flow_mod()
+  # command=of.OFPFC_ADD
+  # msg.match = of.ofp_match.from_packet(packet)
+  # msg.match = of.ofp_match(dl_dst = packet.dst)
+  # msg.idle_timeout = 0
+  # msg.hard_timeout = 0
+  # msg.priority = 32768
+  # msg.actions.append(of.ofp_action_output(port = self.mac_to_port[packet.dst]))
+  # self.connection.send(msg)
+  # self.flow_record[packet.dst] = 1
+
   else:
     # Flood the packet out everything but the input port
     # This part looks familiar, right?
