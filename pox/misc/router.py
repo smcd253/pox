@@ -91,6 +91,9 @@ def arp_handler(rt_object, packet, packet_in):
   # check if in rt_object.ip_to_mac, if not add
   if(packet.payload.protosrc not in rt_object.ip_to_mac):
     rt_object.ip_to_mac[packet.payload.protosrc] = packet.src
+  # same with ip_to_port
+  if(packet.payload.protosrc not in rt_object.ip_to_port):
+    rt_object.ip_to_port[packet.payload.protosrc] = packet_in.in_port
 
   # handle arp request
   # NOTE: this produces the same output. what is going on??
