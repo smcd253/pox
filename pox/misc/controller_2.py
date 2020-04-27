@@ -60,33 +60,45 @@ class Tutorial (object):
     should work for all the scenarios
     """
     # mannage all connections
-    self.connections = {self.dpid: self.connection}
+    self.connections = {}
 
     # mac to port table (for in-network switching)
     self.mac_to_port = {}
-    self.mac_to_port[self.dpid] = {}
 
     # buffer
     self.buffer = {}
-    self.buffer[self.dpid] = {}
 
     # ip to mac table
     self.ip_to_mac = {}
-    self.ip_to_mac[self.dpid] = {}
     
     # ip to port table
     self.ip_to_port = {}
-    self.ip_to_port[self.dpid] = {}
 
     # self.routing_table = {""" fill with routing table """}
     self.routing_table_r1 = { "10.0.0.0": {"prefix": 24, "port": 1, "router_interface": "10.0.0.1"},
                               "20.0.0.0": {"prefix": 24, "port": 2, "router_interface": '20.0.0.1'},
                               '30.0.0.0': {"prefix": 24, 'port': 3, 'router_interface': '30.0.0.1'}}
     
-    # replace "r1" with dpid
     self.routing_table = {self.dpid: self.routing_table_r1}
 
     # openflow_objects[dpid] = self
+
+  def add_new_switch(self, event):
+    """
+    Creates relevant data structures for newly connected switch.
+    @param: event - switch connection event
+    """
+    dpid = event.connection.dpid
+    if dpid not in self.connections:
+      self.connections[dpid] = event.connection
+    if dpid not in self.mac_to_port:
+      self.mac_to_port[self.dpid] = {}
+    if dpid not in self.buffer:
+      self.buffer[self.dpid] = {}
+    if dpid not in self.ip_to_mac:
+      self.ip_to_mac[self.dpid] = {}
+    if dpid not in self.ip_to_port:
+      self.ip_to_port[self.dpid] = {}
 
   def resend_packet(self, dpid, packet_in, out_port):
     """
@@ -108,6 +120,8 @@ class Tutorial (object):
     """
     Handles packet in messages from the switch.
     """
+    # add new switches and routers for every connection made
+    self.add_new_switch(event)
 
     packet = event.parsed # This is the parsed packet data.
     if not packet.parsed:
