@@ -26,43 +26,6 @@ log = core.getLogger()
       packet    : The packet that is received from the packet forwarding switch.
       packet_in : The packet_in object that is received from the packet forwarding switch
 """
-# TODO: clean this up (maybe take out functional code and implement where needed?)
-# TODO: DROP THIS PACKET BECAUSE WE ALREADY HAVE A SWITCH HANDLING THIS
-def act_like_switch(sw_object, dpid, packet, packet_in):
-  if packet.src not in sw_object.mac_to_port[dpid]:
-    print("ACT_LIKE_SWITCH(): Learning that " + str(packet.src) + " is attached at port " + str(packet_in.in_port))
-    sw_object.mac_to_port[dpid][packet.src] = packet_in.in_port
-
-  # if the port associated with the destination MAC of the packet is known:
-  if packet.dst in sw_object.mac_to_port[dpid]:
-    # Send packet out the associated port
-    print("ACT_LIKE_SWITCH(): Destination " + str(packet.dst) + " known. Forward msg to port " + str(sw_object.mac_to_port[dpid][packet.dst]) + ".")
-    sw_object.resend_packet(packet_in, sw_object.mac_to_port[dpid][packet.dst])
-
-    # flow mod
-    print("ACT_LIKE_SWITCH(): Installing flow..." + str(sw_object.mac_to_port[dpid][packet.dst]))
-    msg = of.ofp_flow_mod()
-    msg.match = of.ofp_match.from_packet(packet, sw_object.mac_to_port[dpid][packet.dst])
-    msg.match.dl_dst = packet.dst
-    msg.actions.append(of.ofp_action_output(port = sw_object.mac_to_port[dpid][packet.dst]))
-    sw_object.connection.send(msg)
-    
-    # potentially better flow mod
-    # msg = of.ofp_flow_mod()
-    # command=of.OFPFC_ADD
-    # msg.match = of.ofp_match.from_packet(packet)
-    # msg.match = of.ofp_match(dl_dst = packet.dst)
-    # msg.idle_timeout = 0
-    # msg.hard_timeout = 0
-    # msg.priority = 32768
-    # msg.actions.append(of.ofp_action_output(port = self.mac_to_port[packet.dst]))
-    # self.connection.send(msg)
-    # self.flow_record[packet.dst] = 1
-
-  else:
-    # Flood the packet out of all ports except in port
-    print("ACT_LIKE_SWITCH(): MAC" + str(packet.dst) + " not known, resend to all ports.")
-    sw_object.resend_packet(packet_in, of.OFPP_ALL)
 
 ########################################## IP parsing functions ##########################################
 #return netwrok addr as a string
@@ -129,7 +92,7 @@ def generate_arp_reply(rt_object, dpid, packet, packet_in):
   msg.data = eth.pack() 
   action = of.ofp_action_output(port = packet_in.in_port) 
   msg.actions.append(action) 
-  rt_object.connection.send(msg) 
+  rt_object.connections[dpid].send(msg) 
 
 def arp_handler(rt_object, dpid, packet, packet_in):
   """
@@ -161,23 +124,6 @@ def arp_handler(rt_object, dpid, packet, packet_in):
     # if destination ip is the router (default gw), generate arp response
     if (arp_dst_ip == rt_object.routing_table[dpid][get_subnet(rt_object, dpid, packet.payload.protosrc)]["router_interface"]):
       generate_arp_reply(rt_object, dpid, packet, packet_in)
-      
-      # arp_reply = arp()
-      # arp_reply.opcode = arp.REPLY
-      # arp_reply.hwsrc = packet.dst #Destination now is the source MAC address
-      # arp_reply.hwdst = packet.src
-      # arp_reply.protosrc = packet.payload.protodst
-      # arp_reply.protodst= packet.payload.protosrc
-      # eth = ethernet()
-      # eth.type = ethernet.ARP_TYPE
-      # eth.dst = rt_object.ip_to_mac[dpid][packet.payload.protosrc]
-      # eth.src = packet.dst
-      # eth.payload = arp_reply
-      # msg = of.ofp_packet_out()
-      # msg.data = eth.pack()
-      # action = of.ofp_action_output(port = packet_in.in_port)
-      # msg.actions.append(action)
-      # rt_object.connection.send(msg)
 
       # DEBUG
       print("ARP_HANDLER(): Generate ARP Reply: answering MAC %s on port %d" % (rt_object.ip_to_mac[dpid][packet.payload.protosrc], packet_in.in_port))
@@ -190,22 +136,6 @@ def arp_handler(rt_object, dpid, packet, packet_in):
       # act_like_switch(rt_object, dpid, packet, packet_in)
       if(packet.dst == rt_object.routing_table[dpid][get_subnet(rt_object, dpid, arp_dst_ip)]["mac_interface"]):
         generate_arp_reply(rt_object, dpid, packet, packet_in)
-        # arp_reply = arp()
-        # arp_reply.opcode = arp.REPLY
-        # arp_reply.hwsrc = packet.dst #Destination now is the source MAC address
-        # arp_reply.hwdst = packet.src
-        # arp_reply.protosrc = packet.payload.protodst
-        # arp_reply.protodst= packet.payload.protosrc
-        # eth = ethernet()
-        # eth.type = ethernet.ARP_TYPE
-        # eth.dst = rt_object.ip_to_mac[dpid][packet.payload.protosrc]
-        # eth.src = packet.dst
-        # eth.payload = arp_reply
-        # msg = of.ofp_packet_out()
-        # msg.data = eth.pack()
-        # action = of.ofp_action_output(port = packet_in.in_port)
-        # msg.actions.append(action)
-        # rt_object.connection.send(msg)
 
     # DEBUG
     else:
@@ -246,7 +176,7 @@ def generate_arp_request(rt_object, dpid, packet, packet_in):
   msg.data = eth.pack()
   msg.actions.append(of.ofp_action_output(port = rt_object.routing_table[dpid][get_subnet(rt_object, dpid, packet.next.dstip)]["port"]))
   msg.in_port = packet_in.in_port
-  rt_object.connection.send(msg)
+  rt_object.connections[dpid].send(msg)
 
   print("Sending ARP Request on behalf of host at IP %s on port %d." % (packet.next.srcip, packet_in.in_port))
 
@@ -288,7 +218,7 @@ def generate_icmp_reply(rt_object, dpid, packet, icmp_type):
   msg.actions.append(of.ofp_action_output(port = of.OFPP_IN_PORT))
   msg.data = eth_packet.pack()
   msg.in_port = rt_object.ip_to_port[dpid][packet.next.srcip]
-  rt_object.connection.send(msg)
+  rt_object.connections[dpid].send(msg)
 
   # DEBUG
   print('GENERATE_ICMP_REPLY(): Replying to %s with code %d.', str(packet.next.srcip), icmp_type)
@@ -309,7 +239,7 @@ def ip_flow_mod(rt_object, dpid, packet):
   msg.match.nw_dst = packet.next.dstip
   msg.actions.append( of.ofp_action_dl_addr.set_dst(rt_object.ip_to_mac[dpid][packet.next.dstip]) )
   msg.actions.append( of.ofp_action_output(port = rt_object.ip_to_port[dpid][packet.next.dstip]) )
-  rt_object.connection.send(msg)
+  rt_object.connections[dpid].send(msg)
 
   # DEBUG
   print("IP_FLOW_MOD(): Learning IP %s corresponds to MAC %s on PORT %d." % (str(packet.next.dstip), str(rt_object.ip_to_mac[dpid][packet.next.dstip]), rt_object.ip_to_port[dpid][packet.next.dstip]))
@@ -325,7 +255,7 @@ def send_ip_packet(rt_object, dpid, buf_id, inport, dstip):
   msg = of.ofp_packet_out(buffer_id=buf_id, in_port=inport)
   msg.actions.append(of.ofp_action_dl_addr.set_dst(rt_object.ip_to_mac[dpid][dstip]))
   msg.actions.append(of.ofp_action_output(port = rt_object.ip_to_port[dpid][dstip]))
-  rt_object.connection.send(msg)
+  rt_object.connections[dpid].send(msg)
 
   # DEBUG
   print("SEND_IP_PACKET(): Sending BUFFER_ID %d from IN_PORT %d to IP %s at MAC %s on OUT_PORT %d." % (buf_id, inport, str(dstip), str(rt_object.ip_to_mac[dpid][dstip]), rt_object.ip_to_port[dpid][dstip]))
