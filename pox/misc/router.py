@@ -156,21 +156,39 @@ def arp_handler(rt_object, dpid, packet, packet_in):
       msg.data = eth.pack()
       action = of.ofp_action_output(port = packet_in.in_port)
       msg.actions.append(action)
+      rt_object.connection.send(msg)
 
       # DEBUG
       print("ARP_HANDLER(): Generate ARP Reply: answering MAC %s on port %d" % (rt_object.ip_to_mac[dpid][packet.payload.protosrc], packet_in.in_port))
-      rt_object.connection.send(msg)
 
     # if destination ip (packet.payload.protodst) is on same network and this network 
     # (longest prefix match) --> act like switch
     # if same_subnet(rt_object, dpid, arp_dst_ip, arp_src_ip) and is_in_local_routing_table(get_subnet(rt_object, dpid, arp_dst_ip), rt_object.routing_table[dpid]):
     elif same_subnet(rt_object, dpid, arp_dst_ip, arp_src_ip):
       print("ARP_HANDLER(): src ip: %s and dst ip: %s in same network." % (arp_src_ip, arp_dst_ip))
-      act_like_switch(rt_object, dpid, packet, packet_in)
-    
+      # act_like_switch(rt_object, dpid, packet, packet_in)
+      if(packet.dst == rt_object.routing_table[dpid][get_subnet(rt_object, dpid, arp_dst_ip)]["mac_interface"]):
+        arp_reply = arp()
+        arp_reply.opcode = arp.REPLY
+        arp_reply.hwsrc = packet.dst #Destination now is the source MAC address
+        arp_reply.hwdst = packet.src
+        arp_reply.protosrc = packet.payload.protodst
+        arp_reply.protodst= packet.payload.protosrc
+        eth = ethernet()
+        eth.type = ethernet.ARP_TYPE
+        eth.dst = rt_object.ip_to_mac[dpid][packet.payload.protosrc]
+        eth.src = packet.dst
+        eth.payload = arp_reply
+        msg = of.ofp_packet_out()
+        msg.data = eth.pack()
+        action = of.ofp_action_output(port = packet_in.in_port)
+        msg.actions.append(action)
+        rt_object.connection.send(msg)
+
     # DEBUG
     else:
       print("ARP_HANDLER(): something went wrong")
+    
 
   # if this is an arp reply    
   elif packet.next.opcode == arp.REPLY:
