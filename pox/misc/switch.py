@@ -36,15 +36,9 @@ def switch_handler(sw_object, packet, packet_in):
 
     # flow mod
     print "Installing flow..." + str(sw_object.mac_to_port[packet.dst])
-    # msg = of.ofp_flow_mod()
-    # msg.match = of.ofp_match.from_packet(packet, sw_object.mac_to_port[packet.dst])
-    # msg.match.dl_dst = packet.dst
-    # msg.actions.append(of.ofp_action_output(port = sw_object.mac_to_port[packet.dst]))
-    # sw_object.connection.send(msg)
-
     # potentially better flow mod
     msg = of.ofp_flow_mod()
-    command=of.OFPFC_ADD
+    # command = of.OFPFC_ADD
     msg.match = of.ofp_match.from_packet(packet)
     msg.match = of.ofp_match(dl_dst = packet.dst)
     msg.idle_timeout = 0
