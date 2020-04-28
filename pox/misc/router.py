@@ -198,7 +198,7 @@ def generate_arp_request(rt_object, dpid, packet, packet_in):
   arp_req.opcode = arp_req.REQUEST
   arp_req.hwdst = ETHER_BROADCAST
   arp_req.protodst = packet.next.dstip
-  arp_req.hwsrc = rt_object.routing_table[dpid][get_subnet(rt_object, dpid, packet.next.dstip)]["mac_interface"] 
+  arp_req.hwsrc = packet.src 
   arp_req.protosrc = packet.next.srcip
   eth = ethernet(type=ethernet.ARP_TYPE, src=packet.src, dst=ETHER_BROADCAST)
   eth.set_payload(arp_req)
