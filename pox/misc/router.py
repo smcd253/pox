@@ -27,6 +27,7 @@ log = core.getLogger()
       packet_in : The packet_in object that is received from the packet forwarding switch
 """
 # TODO: clean this up (maybe take out functional code and implement where needed?)
+# TODO: DROP THIS PACKET BECAUSE WE ALREADY HAVE A SWITCH HANDLING THIS
 def act_like_switch(sw_object, dpid, packet, packet_in):
   if packet.src not in sw_object.mac_to_port[dpid]:
     print("ACT_LIKE_SWITCH(): Learning that " + str(packet.src) + " is attached at port " + str(packet_in.in_port))
@@ -46,17 +47,17 @@ def act_like_switch(sw_object, dpid, packet, packet_in):
     msg.actions.append(of.ofp_action_output(port = sw_object.mac_to_port[dpid][packet.dst]))
     sw_object.connection.send(msg)
     
-  # potentially better flow mod
-  # msg = of.ofp_flow_mod()
-  # command=of.OFPFC_ADD
-  # msg.match = of.ofp_match.from_packet(packet)
-  # msg.match = of.ofp_match(dl_dst = packet.dst)
-  # msg.idle_timeout = 0
-  # msg.hard_timeout = 0
-  # msg.priority = 32768
-  # msg.actions.append(of.ofp_action_output(port = self.mac_to_port[packet.dst]))
-  # self.connection.send(msg)
-  # self.flow_record[packet.dst] = 1
+    # potentially better flow mod
+    # msg = of.ofp_flow_mod()
+    # command=of.OFPFC_ADD
+    # msg.match = of.ofp_match.from_packet(packet)
+    # msg.match = of.ofp_match(dl_dst = packet.dst)
+    # msg.idle_timeout = 0
+    # msg.hard_timeout = 0
+    # msg.priority = 32768
+    # msg.actions.append(of.ofp_action_output(port = self.mac_to_port[packet.dst]))
+    # self.connection.send(msg)
+    # self.flow_record[packet.dst] = 1
 
   else:
     # Flood the packet out of all ports except in port

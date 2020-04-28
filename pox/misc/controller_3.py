@@ -14,7 +14,7 @@
 
 """
 [555 Comments]
-This is the controller file corresponding to scenario 3.
+This is the controller file corresponding to scenario 2.
 """
 
 from pox.core import core
@@ -26,6 +26,8 @@ from pox.lib.packet.icmp import *
 from pox.lib.packet.ipv4 import *
 from switch import *
 from router import *
+from collections import OrderedDict
+from pox.lib.util import dpid_to_str
 
 log = core.getLogger()
 
@@ -41,22 +43,60 @@ class Tutorial (object):
 
     # This binds our PacketIn event listener
     connection.addListeners(self)
-
+    self.dpid = dpid_to_str(connection.dpid)
+    
     """
     [555 Comments]
-    In scenario 3, there are many routers and switches. You need to classify a device as a router or a switch based on its DPID
-    Remember one thing very carefully. The DPID gets assigned based on how you define tour devices in the topology file.
-    So, be careful and DPID here should be coordinated with your definition in topology file.
-    For the details of port info table, routing table, of different routers look into the project description document provided.
-    Initialize any other data structures you wish to for the routers and switches here
+    In scenario 2, there is only one router. So, classify it as a router and initialize all the data structures you need for
+    the router here.
+    For the details of port info table, routing table, look into the project description document provided.
+    Initialize all the data structures you wish to for the router in this function
 
     A word of caution:
     Your router and switch code should be the same for all scenarios. So, be careful to design your data structures for router
     and switches in such a way that your single piece of switch code and router code along with your data structure design
     should work for all the scenarios
     """
+    # mannage all connections
+    self.connections = {}
 
-  def resend_packet (self, packet_in, out_port):
+    # mac to port table (for in-network switching)
+    self.mac_to_port = {}
+
+    # buffer
+    self.buffer = {}
+
+    # ip to mac table
+    self.ip_to_mac = {}
+    
+    # ip to port table
+    self.ip_to_port = {}
+
+    # self.routing_table = {""" fill with routing table """}
+    self.routing_table_r1 = { "10.0.0.0": {"prefix": 24, "port": 1, "router_interface": "10.0.0.1"},
+                              "20.0.0.0": {"prefix": 24, "port": 2, "router_interface": '20.0.0.1'},
+                              '30.0.0.0': {"prefix": 24, 'port': 3, 'router_interface': '30.0.0.1'}}
+    
+    self.routing_table = {self.dpid: self.routing_table_r1}
+
+  def add_new_switch(self, event):
+    """
+    Creates relevant data structures for newly connected switch.
+    @param: event - switch connection event
+    """
+    dpid = dpid_to_str(event.connection.dpid)
+    if dpid not in self.connections:
+      self.connections[dpid] = event.connection
+    if dpid not in self.mac_to_port:
+      self.mac_to_port[dpid] = {}
+    if dpid not in self.buffer:
+      self.buffer[dpid] = {}
+    if dpid not in self.ip_to_mac:
+      self.ip_to_mac[dpid] = {}
+    if dpid not in self.ip_to_port:
+      self.ip_to_port[dpid] = {}
+
+  def resend_packet(self, dpid, packet_in, out_port):
     """
     Instructs the switch to resend a packet that it had sent to us.
     "packet_in" is the ofp_packet_in object the switch had sent to the
@@ -70,12 +110,14 @@ class Tutorial (object):
     msg.actions.append(action)
 
     # Send message to switch
-    self.connection.send(msg)
+    self.connections[dpid].send(msg)
     
   def _handle_PacketIn (self, event):
     """
     Handles packet in messages from the switch.
     """
+    # add new switches and routers for every connection made
+    self.add_new_switch(event)
 
     packet = event.parsed # This is the parsed packet data.
     if not packet.parsed:
@@ -95,7 +137,7 @@ class Tutorial (object):
     else: (if it is not switch, it means router. We have only two kinds of devices, one is switch and one is router)
       invoke router_handler and pass the object (i.e., self) and the packet and packet_in
     """
-
+    router_handler(self, self.dpid, packet, packet_in)
 
 def launch ():
   """
