@@ -50,7 +50,7 @@ def switch_handler(sw_object, packet, packet_in):
     msg.idle_timeout = 0
     msg.hard_timeout = 0
     msg.priority = 32768 # A0
-    msg.actions.append(of.ofp_action_output(port = rt_object.mac_to_port[packet.dst]))
+    msg.actions.append(of.ofp_action_output(port = sw_object.mac_to_port[packet.dst]))
     sw_object.connection.send(msg)
 
   else:
