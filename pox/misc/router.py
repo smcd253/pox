@@ -196,7 +196,7 @@ def generate_arp_request(rt_object, dpid, packet, packet_in):
   arp_req.hwlen = 6
   arp_req.protolen = arp_req.protolen
   arp_req.opcode = arp_req.REQUEST
-  # arp_req.hwdst = packet.dst
+  arp_req.hwdst = ETHER_BROADCAST
   arp_req.protodst = packet.next.dstip
   arp_req.hwsrc = rt_object.routing_table[dpid][get_subnet(rt_object, dpid, packet.next.dstip)]["mac_interface"] 
   arp_req.protosrc = packet.next.srcip
