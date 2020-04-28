@@ -196,15 +196,15 @@ def generate_arp_request(rt_object, dpid, packet, packet_in):
   arp_req.hwlen = 6
   arp_req.protolen = arp_req.protolen
   arp_req.opcode = arp_req.REQUEST
-  arp_req.hwdst = ETHER_BROADCAST
+  # arp_req.hwdst = packet.dst
   arp_req.protodst = packet.next.dstip
-  arp_req.hwsrc = packet.src 
+  arp_req.hwsrc = rt_object.routing_table[dpid][get_subnet(rt_object, dpid, packet.next.dstip)]["mac_interface"] 
   arp_req.protosrc = packet.next.srcip
   eth = ethernet(type=ethernet.ARP_TYPE, src=packet.src, dst=ETHER_BROADCAST)
   eth.set_payload(arp_req)
   msg = of.ofp_packet_out()
   msg.data = eth.pack()
-  msg.actions.append(of.ofp_action_output(port = of.OFPP_FLOOD))
+  msg.actions.append(of.ofp_action_output(port = rt_object.routing_table[dpid][get_subnet(rt_object, dpid, packet.next.dstip)]["port"]))
   msg.in_port = packet_in.in_port
   rt_object.connection.send(msg)
 

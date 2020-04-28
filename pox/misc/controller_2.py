@@ -75,7 +75,7 @@ class Tutorial (object):
     # self.routing_table = {""" fill with routing table """}
     self.routing_table_r1 = { "10.0.0.0": {"prefix": 24, "port": 1, "mac_interface": "02:00:DE:AD:BE:11", "router_interface": "10.0.0.1"},
                               "20.0.0.0": {"prefix": 24, "port": 2, "mac_interface": "02:00:DE:AD:BE:12", "router_interface": "20.0.0.1"},
-                              "30.0.0.0": {"prefix": 24, "port": 3, "mac_interface": "02:00:DE:AD:BE:1", "router_interface": "30.0.0.1"}}
+                              "30.0.0.0": {"prefix": 24, "port": 3, "mac_interface": "02:00:DE:AD:BE:13", "router_interface": "30.0.0.1"}}
     
     self.routing_table = {self.dpid: self.routing_table_r1}
 
