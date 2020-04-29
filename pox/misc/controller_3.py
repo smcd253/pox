@@ -103,19 +103,22 @@ class Tutorial (object):
     @param: event - switch connection event
     """
     dpid = dpid_to_str(event.connection.dpid)
-
+    dpid_compare = int(dpid.split("-")[5])
+    # DEBUG
+    print("dpid_compare = %d" % (dpid_compare))
+    
     # populate routing tables by dpid
-    if(dpid == 1):
+    if(dpid_compare == 1):
       self.routing_table[dpid] = {self.routing_table_r1}
-    if(dpid == 2):
+    if(dpid_compare == 2):
       self.routing_table[dpid] = {self.routing_table_r2}
-    if(dpid == 3):
+    if(dpid_compare == 3):
       self.routing_table[dpid] = {self.routing_table_r3}
 
     # populate object_types[dpid] to help with other data structures
-    if(dpid >= 1 and dpid <= 3):
+    if(dpid_compare >= 1 and dpid_compare <= 3):
       self.object_types[dpid] = "router"
-    elif(dpid >= 4 and dpid <= 8):
+    elif(dpid_compare >= 4 and dpid_compare <= 8):
       self.object_types[dpid] = "switch" 
 
     if dpid not in self.connections:
