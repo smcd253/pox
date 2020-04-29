@@ -95,7 +95,9 @@ class Tutorial (object):
     """
     Handles packet in messages from the switch.
     """
-
+    # add new switches and routers for every connection made
+    self.add_new_switch(event)
+    
     packet = event.parsed # This is the parsed packet data.
     if not packet.parsed:
       log.warning("Ignoring incomplete packet")
