@@ -223,7 +223,7 @@ def generate_icmp_reply(rt_object, dpid, packet, icmp_type):
   rt_object.connections[dpid].send(msg)
 
   # DEBUG
-  print('GENERATE_ICMP_REPLY(): Replying to %s with code %d.', str(packet.next.srcip), icmp_type)
+  print('GENERATE_ICMP_REPLY(): Replying to IP %s with ICMP_CODE %d from PORT %d and MAC %s.' % (str(packet.next.srcip), icmp_type, msg.in_port, str(eth_packet.src)))
 
 ########################################## IPV4 functions ##########################################
 def ip_flow_mod(rt_object, dpid, packet):
