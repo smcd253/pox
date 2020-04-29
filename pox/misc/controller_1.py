@@ -71,6 +71,8 @@ class Tutorial (object):
     @param: event - switch connection event
     """
     dpid = dpid_to_str(event.connection.dpid)
+    if dpid not in self.connections:
+      self.connections[dpid] = event.connection
     if (self.object_type == "switch"):
       if dpid not in self.mac_to_port:
         self.mac_to_port[dpid] = {}
@@ -97,7 +99,7 @@ class Tutorial (object):
     """
     # add new switches and routers for every connection made
     self.add_new_switch(event)
-    
+
     packet = event.parsed # This is the parsed packet data.
     if not packet.parsed:
       log.warning("Ignoring incomplete packet")
