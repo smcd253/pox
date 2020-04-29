@@ -62,7 +62,9 @@ class Tutorial (object):
     # initialize switch object
     # map mac address to port number on switch
     self.mac_to_port = {}
-    self.object_type = "switch"
+
+    # dictionary to contain all object types (switch or router)
+    self.object_types = {}
 
 
   def add_new_switch(self, event):
@@ -71,9 +73,10 @@ class Tutorial (object):
     @param: event - switch connection event
     """
     dpid = dpid_to_str(event.connection.dpid)
+    self.object_types[dpid] = "switch"
     if dpid not in self.connections:
       self.connections[dpid] = event.connection
-    if (self.object_type == "switch"):
+    if (self.object_types[dpid] == "switch"):
       if dpid not in self.mac_to_port:
         self.mac_to_port[dpid] = {}
     

@@ -296,7 +296,6 @@ def ipv4_handler(rt_object, dpid, packet, packet_in):
       if isinstance(packet.next.next, icmp):
         if(packet.next.next.type == TYPE_ECHO_REQUEST):
           generate_icmp_reply(rt_object, dpid, packet, TYPE_ECHO_REPLY)
-    
 
     else:
       destination_ip = None

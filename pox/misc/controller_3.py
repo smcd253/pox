@@ -45,6 +45,9 @@ class Tutorial (object):
     connection.addListeners(self)
     self.dpid = dpid_to_str(connection.dpid)
     
+    # DEBUG
+    print("*************** CONTROLLER INIT() dpid = " + self.dpid + " *************** ")
+    
     """
     [555 Comments]
     In scenario 2, there is only one router. So, classify it as a router and initialize all the data structures you need for
@@ -72,15 +75,25 @@ class Tutorial (object):
     # ip to port table
     self.ip_to_port = {}
 
-    # self.routing_table = {""" fill with routing table """}
-    self.routing_table_r1 = { "10.0.0.0": {"prefix": 24, "port": 1, "router_interface": "10.0.0.1"},
-                              "20.0.0.0": {"prefix": 24, "port": 2, "router_interface": '20.0.0.1'},
-                              '30.0.0.0': {"prefix": 24, 'port': 3, 'router_interface': '30.0.0.1'}}
-    
-    # dictionary to contain all routing tables
-    self.routing_table = {self.dpid: self.routing_table_r1}
+    # routing table for each router
+    self.routing_table_r1 = { "172.17.16.0":  {"prefix": 24, "port": 1, "mac_interface": "02:00:DE:AD:BE:11", "router_interface": "172.17.16.1", "next_hop": "0.0.0.0"},
+                              "10.0.0.0":     {"prefix": 24, "port": 2, "mac_interface": "02:00:DE:AD:BE:12", "router_interface": "192.168.0.1", "next_hop": "192.168.0.3"},
+                              "20.0.0.0":     {"prefix": 24, "port": 3, "mac_interface": "02:00:DE:AD:BE:13", "router_interface": "192.168.0.5", "next_hop": "192.168.0.6"}}
 
-    # dictionaty to contain all object types (switch or router)
+    self.routing_table_r2 = { "172.17.16.0":  {"prefix": 24, "port": 3, "mac_interface": "02:00:DE:AD:BE:23", "router_interface": "192.168.0.2", "next_hop": "192.168.0.1"},
+                              "0.0.0.0":      {"prefix": 32, "port": 3, "mac_interface": "02:00:DE:AD:BE:23", "router_interface": "192.168.0.2", "next_hop": "192.168.0.1"},
+                              "10.0.0.0":     {"prefix": 25, "port": 1, "mac_interface": "02:00:DE:AD:BE:21", "router_interface": "10.0.0.1",    "next_hop": "0.0.0.0"},
+                              "10.0.0.128":   {"prefix": 25, "port": 2, "mac_interface": "02:00:DE:AD:BE:22", "router_interface": "10.0.0.129",  "next_hop": "0.0.0.0"}}
+
+    self.routing_table_r3 = { "172.17.16.0":  {"prefix": 24, "port": 3, "mac_interface": "02:00:DE:AD:BE:33", "router_interface": "192.168.0.6", "next_hop": "192.168.0.5"},
+                              "10.0.0.0":     {"prefix": 24, "port": 3, "mac_interface": "02:00:DE:AD:BE:33", "router_interface": "192.168.0.6", "next_hop": "192.168.0.5"},
+                              "20.0.0.0":     {"prefix": 25, "port": 1, "mac_interface": "02:00:DE:AD:BE:31", "router_interface": "20.0.0.1",    "next_hop": "0.0.0.0"},
+                              "20.0.0.128":   {"prefix": 25, "port": 2, "mac_interface": "02:00:DE:AD:BE:32", "router_interface": "20.0.0.129",  "next_hop": "0.0.0.0"}}
+    
+    # global routing table dictionary
+    self.routing_table = {}
+
+    # dictionary to contain all object types (switch or router)
     self.object_types = {}
     
 
@@ -90,6 +103,14 @@ class Tutorial (object):
     @param: event - switch connection event
     """
     dpid = dpid_to_str(event.connection.dpid)
+
+    # populate routing tables by dpid
+    if(dpid == 1):
+      self.routing_table[dpid] = {self.routing_table_r1}
+    if(dpid == 2):
+      self.routing_table[dpid] = {self.routing_table_r2}
+    if(dpid == 3):
+      self.routing_table[dpid] = {self.routing_table_r3}
 
     # populate object_types[dpid] to help with other data structures
     if(dpid >= 1 and dpid <= 3):
