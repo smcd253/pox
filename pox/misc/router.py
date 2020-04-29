@@ -209,6 +209,7 @@ def generate_icmp_reply(rt_object, dpid, packet, icmp_type):
   ip_packet.dstip = packet.next.srcip
 
   eth_packet = ethernet()
+  # force eth src to be this mac interface
   eth_packet.src = rt_object.routing_table[dpid][get_subnet(rt_object, dpid, packet.next.srcip)]["mac_interface"]
   eth_packet.dst = packet.src
   eth_packet.type = eth_packet.IP_TYPE
