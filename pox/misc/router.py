@@ -163,6 +163,7 @@ def generate_arp_request(rt_object, dpid, destination_ip, packet, packet_in):
   @param:   packet - ethernet packet (in this case, packet.next = arp packet)
   @param:   packet_in - ofp_packet_in object (switch to controller due to table miss)
   """
+  print("GENERATE_ARP_REQUEST(): DPID %s from SOURCE IP %s to DEST IP %s." % (dpid, str(packet.next.srcip), destination_ip))
   arp_req = arp()
   arp_req.hwtype = arp_req.HW_TYPE_ETHERNET
   arp_req.prototype = arp_req.PROTO_TYPE_IP
