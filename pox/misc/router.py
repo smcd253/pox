@@ -82,7 +82,7 @@ def generate_arp_reply(rt_object, dpid, packet, packet_in):
   #Destination now is the source MAC address 
   arp_reply.hwdst = packet.src 
   arp_reply.protosrc = packet.payload.protodst 
-  arp_reply.protodst= packet.payload.protosrc 
+  arp_reply.protodst = packet.payload.protosrc 
   eth = ethernet() 
   eth.type = ethernet.ARP_TYPE 
   eth.dst = rt_object.ip_to_mac[dpid][packet.payload.protosrc] 
@@ -93,7 +93,8 @@ def generate_arp_reply(rt_object, dpid, packet, packet_in):
   action = of.ofp_action_output(port = packet_in.in_port) 
   msg.actions.append(action) 
   rt_object.connections[dpid].send(msg) 
-
+  print("GENERATE_ARP_REPLY(): eth.src = " + str(eth.src))
+  
 def arp_handler(rt_object, dpid, packet, packet_in):
   """
   Handles all incoming arp packets.
