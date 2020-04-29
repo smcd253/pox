@@ -153,7 +153,7 @@ def arp_handler(rt_object, dpid, packet, packet_in):
     # release buffer
     release_buffer(rt_object, dpid, packet.payload.protosrc)
 
-def generate_arp_request(rt_object, dpid, packet, packet_in):
+def generate_arp_request(rt_object, dpid, destination_ip, packet, packet_in):
   """
   Composes and sends arp request.
   @param:   rt_object - controller object
@@ -167,7 +167,7 @@ def generate_arp_request(rt_object, dpid, packet, packet_in):
   arp_req.protolen = arp_req.protolen
   arp_req.opcode = arp_req.REQUEST
   arp_req.hwdst = ETHER_BROADCAST
-  arp_req.protodst = packet.next.dstip
+  arp_req.protodst = destination_ip
   arp_req.hwsrc = packet.src 
   arp_req.protosrc = packet.next.srcip
   eth = ethernet(type=ethernet.ARP_TYPE, src=packet.src, dst=ETHER_BROADCAST)
@@ -296,25 +296,31 @@ def ipv4_handler(rt_object, dpid, packet, packet_in):
       if isinstance(packet.next.next, icmp):
         if(packet.next.next.type == TYPE_ECHO_REQUEST):
           generate_icmp_reply(rt_object, dpid, packet, TYPE_ECHO_REPLY)
-    # if packet is meant for network connected to another router, forward to next hop
-    # elif(rt_object.routing_table[dpid][get_subnet(packe.next.dstip)]["next_hop"] != "0.0.0.0"):
-    #     generate_arp_request(rt_object, dpid, packet, packet_in)
+    
 
     else:
+      destination_ip = None
+      # if packet is meant for network connected to another router, forward to next hop
+      next_hop = rt_object.routing_table[dpid][get_subnet(rt_object, dpid, packet.next.dstip)]["next_hop"]
+      if(next_hop != "0.0.0.0"):
+        destination_ip = next_hop
+      else:
+        destination_ip = packet.next.dstip
+
       # if we are waiting for the arp reply to learn the mac address of the next hop
       # cache this packet
-      if packet.next.dstip not in rt_object.ip_to_mac[dpid] or packet.next.dstip not in rt_object.ip_to_port[dpid]:
+      if destination_ip not in rt_object.ip_to_mac[dpid] or destination_ip not in rt_object.ip_to_port[dpid]:
         # add a new buffer for this dstip if it does not already exist
-        if packet.next.dstip not in rt_object.buffer[dpid]:
-          rt_object.buffer[dpid][packet.next.dstip] = []
+        if destination_ip not in rt_object.buffer[dpid]:
+          rt_object.buffer[dpid][destination_ip] = []
 
         # cache packet
         buffer_entry = {"buffer_id": packet_in.buffer_id, "port": packet_in.in_port}
-        rt_object.buffer[dpid][packet.next.dstip].append(buffer_entry)
+        rt_object.buffer[dpid][destination_ip].append(buffer_entry)
         print("IPV4_HANDLER(): Destination: %s unknown. Buffer packet: %s" % (packet.next.dstip, packet_in.buffer_id))
 
         # generate arp request to learn next hop
-        generate_arp_request(rt_object, dpid, packet, packet_in)
+        generate_arp_request(rt_object, dpid, destination_ip, packet, packet_in)
   
       # we've already received the arp reply, so forward to known destination
       else:
