@@ -115,6 +115,7 @@ def arp_handler(rt_object, dpid, packet, packet_in):
 
   # handle arp request
   # NOTE: this produces the same output. what is going on??
+  print("ARP_HANDLER(): DPID = " + dpid)
   print("ARP_HANDLER(): packet.payload = " + str(packet.payload))
   arp_dst_ip = str(packet.payload.protodst)
   arp_src_ip = str(packet.payload.protosrc)
@@ -287,6 +288,7 @@ def ipv4_handler(rt_object, dpid, packet, packet_in):
   # learn route
   rt_object.ip_to_port[dpid][packet.next.srcip] = packet_in.in_port
 
+  print("IPV4_HANDLER(): DPID = " + dpid)
   print("IPV4_HANDLER(): packet.srcip = " + str(packet.next.srcip))
   print("IPV4_HANDLER(): packet.dstip = " + str(packet.next.dstip))
   print("IPV4_HANDLER(): packet.payload = " + str(packet.next.payload))
