@@ -106,14 +106,14 @@ class Tutorial (object):
     dpid_compare = int(dpid.split("-")[5])
     # DEBUG
     print("dpid_compare = %d" % (dpid_compare))
-    
+
     # populate routing tables by dpid
     if(dpid_compare == 1):
-      self.routing_table[dpid] = {self.routing_table_r1}
+      self.routing_table[dpid] = self.routing_table_r1
     if(dpid_compare == 2):
-      self.routing_table[dpid] = {self.routing_table_r2}
+      self.routing_table[dpid] = self.routing_table_r2
     if(dpid_compare == 3):
-      self.routing_table[dpid] = {self.routing_table_r3}
+      self.routing_table[dpid] = self.routing_table_r3
 
     # populate object_types[dpid] to help with other data structures
     if(dpid_compare >= 1 and dpid_compare <= 3):
