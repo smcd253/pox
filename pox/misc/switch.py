@@ -49,4 +49,4 @@ def switch_handler(sw_object, dpid, packet, packet_in):
     # Flood the packet out everything but the input port
     # This part looks familiar, right?
     print(str(packet.dst) + " not known, resend to all ports.")
-    sw_object.resend_packet(packet_in, of.OFPP_ALL)
+    sw_object.resend_packet(dpid, packet_in, of.OFPP_ALL)
