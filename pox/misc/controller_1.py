@@ -118,7 +118,7 @@ class Tutorial (object):
     else: (if it is not switch, it means router. We have only two kinds of devices, one is switch and one is router)
       invoke router_handler and pass the object (i.e., self) and the packet and packet_in
     """
-    # try switch only first
+    # switch only for controller 1
     switch_handler(self, self.dpid, packet, packet_in)
 
 
