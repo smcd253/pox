@@ -77,12 +77,12 @@ class Tutorial (object):
                               "20.0.0.0": {"prefix": 24, "port": 2, "router_interface": '20.0.0.1'},
                               '30.0.0.0': {"prefix": 24, 'port': 3, 'router_interface': '30.0.0.1'}}
     
+    # dictionary to contain all routing tables
     self.routing_table = {self.dpid: self.routing_table_r1}
-    self.mac_to_port = {}
-    # if(this.dpid >= 1 and this.dpid <= 3):
-    #   self.object_type = "router"
-    # if(this.dpid >= 4 and this.dpid <= 8):
-    #   self.object_type = "switch"
+
+    # dictionaty to contain all object types (switch or router)
+    self.object_types = {}
+    
 
   def add_new_switch(self, event):
     """
@@ -90,18 +90,25 @@ class Tutorial (object):
     @param: event - switch connection event
     """
     dpid = dpid_to_str(event.connection.dpid)
-    if (self.object_type == "switch"):
+
+    # populate object_types[dpid] to help with other data structures
+    if(dpid >= 1 and dpid <= 3):
+      self.object_types[dpid] = "router"
+    elif(dpid >= 4 and dpid <= 8):
+      self.object_types[dpid] = "switch" 
+
+    if dpid not in self.connections:
+        self.connections[dpid] = event.connection
+    if (self.object_types[dpid] == "switch"):
       if dpid not in self.mac_to_port:
         self.mac_to_port[dpid] = {}
-    elif (self.object_type == "router"):
-      # if dpid not in self.connections:
-      #   self.connections[dpid] = event.connection
-      # if dpid not in self.buffer:
-      #   self.buffer[dpid] = {}
-      # if dpid not in self.ip_to_mac:
-      #   self.ip_to_mac[dpid] = {}
-      # if dpid not in self.ip_to_port:
-      #   self.ip_to_port[dpid] = {}
+    elif (self.object_types[dpid] == "router"):
+      if dpid not in self.buffer:
+        self.buffer[dpid] = {}
+      if dpid not in self.ip_to_mac:
+        self.ip_to_mac[dpid] = {}
+      if dpid not in self.ip_to_port:
+        self.ip_to_port[dpid] = {}
 
   def resend_packet(self, dpid, packet_in, out_port):
     """
@@ -144,7 +151,10 @@ class Tutorial (object):
     else: (if it is not switch, it means router. We have only two kinds of devices, one is switch and one is router)
       invoke router_handler and pass the object (i.e., self) and the packet and packet_in
     """
-    router_handler(self, self.dpid, packet, packet_in)
+    if (self.object_types[self.dpid] == "switch"):
+      switch_handler(self, self.dpid, packet, packet_in)
+    elif (self.object_types[self.dpid] == "router"):
+      router_handler(self, self.dpid, packet, packet_in)
 
 def launch ():
   """
