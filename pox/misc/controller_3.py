@@ -78,6 +78,11 @@ class Tutorial (object):
                               '30.0.0.0': {"prefix": 24, 'port': 3, 'router_interface': '30.0.0.1'}}
     
     self.routing_table = {self.dpid: self.routing_table_r1}
+    self.mac_to_port = {}
+    # if(this.dpid >= 1 and this.dpid <= 3):
+    #   self.object_type = "router"
+    # if(this.dpid >= 4 and this.dpid <= 8):
+    #   self.object_type = "switch"
 
   def add_new_switch(self, event):
     """
@@ -85,16 +90,18 @@ class Tutorial (object):
     @param: event - switch connection event
     """
     dpid = dpid_to_str(event.connection.dpid)
-    if dpid not in self.connections:
-      self.connections[dpid] = event.connection
-    if dpid not in self.mac_to_port:
-      self.mac_to_port[dpid] = {}
-    if dpid not in self.buffer:
-      self.buffer[dpid] = {}
-    if dpid not in self.ip_to_mac:
-      self.ip_to_mac[dpid] = {}
-    if dpid not in self.ip_to_port:
-      self.ip_to_port[dpid] = {}
+    if (self.object_type == "switch"):
+      if dpid not in self.mac_to_port:
+        self.mac_to_port[dpid] = {}
+    elif (self.object_type == "router"):
+      # if dpid not in self.connections:
+      #   self.connections[dpid] = event.connection
+      # if dpid not in self.buffer:
+      #   self.buffer[dpid] = {}
+      # if dpid not in self.ip_to_mac:
+      #   self.ip_to_mac[dpid] = {}
+      # if dpid not in self.ip_to_port:
+      #   self.ip_to_port[dpid] = {}
 
   def resend_packet(self, dpid, packet_in, out_port):
     """

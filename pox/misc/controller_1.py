@@ -44,6 +44,7 @@ class Tutorial (object):
 
     # This binds our PacketIn event listener
     connection.addListeners(self)
+    self.dpid = dpid_to_str(connection.dpid)
 
     """
     [555 Comments]
@@ -55,13 +56,26 @@ class Tutorial (object):
     and switches in such a way that your single piece of switch code and router code along with your data structure design
     should work for all the scenarios
     """
+    # mannage all connections
+    self.connections = {}
 
     # initialize switch object
-    # corresponds to mac_to_port
+    # map mac address to port number on switch
     self.mac_to_port = {}
-    self.dpid = dpid_to_str(connection.dpid)
+    self.object_type = "switch"
 
-  def resend_packet (self, packet_in, out_port):
+
+  def add_new_switch(self, event):
+    """
+    Creates relevant data structures for newly connected switch.
+    @param: event - switch connection event
+    """
+    dpid = dpid_to_str(event.connection.dpid)
+    if (self.object_type == "switch"):
+      if dpid not in self.mac_to_port:
+        self.mac_to_port[dpid] = {}
+    
+  def resend_packet(self, dpid, packet_in, out_port):
     """
     Instructs the switch to resend a packet that it had sent to us.
     "packet_in" is the ofp_packet_in object the switch had sent to the
@@ -75,7 +89,7 @@ class Tutorial (object):
     msg.actions.append(action)
 
     # Send message to switch
-    self.connection.send(msg)
+    self.connections[dpid].send(msg)
     
   def _handle_PacketIn (self, event):
     """

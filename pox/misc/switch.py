@@ -23,27 +23,27 @@ log = core.getLogger()
       packet_in : The packet_in object that is received from the packet forwarding switch
 """
 
-def switch_handler(sw_object, packet, packet_in):
-  if packet.src not in sw_object.mac_to_port:
+def switch_handler(sw_object, dpid, packet, packet_in):
+  if packet.src not in sw_object.mac_to_port[dpid]:
     print("Learning that " + str(packet.src) + " is attached at port " + str(packet_in.in_port))
-    sw_object.mac_to_port[packet.src] = packet_in.in_port
+    sw_object.mac_to_port[dpid][packet.src] = packet_in.in_port
 
   # if the port associated with the destination MAC of the packet is known:
-  if packet.dst in sw_object.mac_to_port:
+  if packet.dst in sw_object.mac_to_port[dpid]:
     # Send packet out the associated port
-    print("Destination " + str(packet.dst) + " known. Forward msg to port " + str(sw_object.mac_to_port[packet.dst]) + ".")
-    sw_object.resend_packet(packet_in, sw_object.mac_to_port[packet.dst])
+    print("Destination " + str(packet.dst) + " known. Forward msg to port " + str(sw_object.mac_to_port[dpid][packet.dst]) + ".")
+    sw_object.resend_packet(dpid, packet_in, sw_object.mac_to_port[dpid][packet.dst])
 
     # flow mod
-    print("Installing flow..." + str(sw_object.mac_to_port[packet.dst]))
+    print("Installing flow..." + str(sw_object.mac_to_port[dpid][packet.dst]))
     msg = of.ofp_flow_mod()
     msg.match = of.ofp_match.from_packet(packet)
     msg.match = of.ofp_match(dl_dst = packet.dst)
     msg.idle_timeout = 0
     msg.hard_timeout = 0
     msg.priority = 32768 # A0
-    msg.actions.append(of.ofp_action_output(port = sw_object.mac_to_port[packet.dst]))
-    sw_object.connection.send(msg)
+    msg.actions.append(of.ofp_action_output(port = sw_object.mac_to_port[dpid][packet.dst]))
+    sw_object.connections[dpid].send(msg)
 
   else:
     # Flood the packet out everything but the input port

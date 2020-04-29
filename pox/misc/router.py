@@ -296,7 +296,10 @@ def ipv4_handler(rt_object, dpid, packet, packet_in):
       if isinstance(packet.next.next, icmp):
         if(packet.next.next.type == TYPE_ECHO_REQUEST):
           generate_icmp_reply(rt_object, dpid, packet, TYPE_ECHO_REPLY)
-      
+    # if packet is meant for network connected to another router, forward to next hop
+    # elif(rt_object.routing_table[dpid][get_subnet(packe.next.dstip)]["next_hop"] != "0.0.0.0"):
+    #     generate_arp_request(rt_object, dpid, packet, packet_in)
+
     else:
       # if we are waiting for the arp reply to learn the mac address of the next hop
       # cache this packet
