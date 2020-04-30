@@ -332,7 +332,7 @@ def ipv4_handler(rt_object, dpid, packet, packet_in):
         destination_ip = next_hop
         print("IPV4_HANLDER(): destination_ip is next hop")
       else:
-        destination_ip = packet.next.dstip
+        destination_ip = str(packet.next.dstip)
 
       # if we are waiting for the arp reply to learn the mac address of the next hop
       # cache this packet
