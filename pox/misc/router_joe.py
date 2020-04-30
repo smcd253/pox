@@ -79,7 +79,7 @@ def get_subnet_from_interface_ip(rt_object, dpid, interface_ip):
     if(table["router_interface"] == interface_ip):
       return subnet
   return ""
-
+  
 ########################################## ARP functions ##########################################
 def generate_arp_reply(rt_object, dpid, packet, packet_in): 
   arp_reply = arp() 
@@ -88,14 +88,19 @@ def generate_arp_reply(rt_object, dpid, packet, packet_in):
   #Destination now is the source MAC address 
   arp_reply.hwdst = packet.src 
   arp_reply.protosrc = packet.payload.protodst 
+  print("Protosrc======",arp_reply.protosrc)
+  print("Protodst======",arp_reply.protodst)
   arp_reply.protodst = packet.payload.protosrc 
   eth = ethernet() 
   eth.type = ethernet.ARP_TYPE 
   eth.dst = rt_object.ip_to_mac[dpid][packet.payload.protosrc]
   # reply with this interface's mac addr
   print(str(packet.payload.protodst))
-  eth.src =  rt_object.routing_table[dpid][get_subnet(rt_object, dpid, get_subnet_from_interface_ip(rt_object, dpid, packet.payload.protodst))]["mac_interface"] #Here is after r1 192.168.0.2
-  print(str(packet.payload.protodst))
+
+  ret_subnet= get_subnet_from_interface_ip(rt_object, dpid, packet.payload.protodst)
+
+  eth.src =  rt_object.routing_table[dpid][get_subnet(rt_object, dpid, ret_subnet)]["mac_interface"] #Here is after r1 192.168.0.1
+  print(str(eth.src ))
   eth.payload = arp_reply 
   msg = of.ofp_packet_out() 
   msg.data = eth.pack() 
