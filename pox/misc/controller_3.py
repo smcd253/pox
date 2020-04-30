@@ -78,7 +78,7 @@ class Tutorial (object):
 
     # routing table for each router
     self.routing_table_r1 = { "172.17.16.0":  {"prefix": 24, "port": 1, "mac_interface": "02:00:DE:AD:BE:11", "router_interface": "172.17.16.1", "next_hop": "0.0.0.0"},
-                              "10.0.0.0":     {"prefix": 24, "port": 2, "mac_interface": "02:00:DE:AD:BE:12", "router_interface": "192.168.0.1", "next_hop": "192.168.0.3"},
+                              "10.0.0.0":     {"prefix": 24, "port": 2, "mac_interface": "02:00:DE:AD:BE:12", "router_interface": "192.168.0.1", "next_hop": "192.168.0.2"},
                               "20.0.0.0":     {"prefix": 24, "port": 3, "mac_interface": "02:00:DE:AD:BE:13", "router_interface": "192.168.0.5", "next_hop": "192.168.0.6"}}
 
     self.routing_table_r2 = { "172.17.16.0":  {"prefix": 24, "port": 3, "mac_interface": "02:00:DE:AD:BE:23", "router_interface": "192.168.0.2", "next_hop": "192.168.0.1"},
