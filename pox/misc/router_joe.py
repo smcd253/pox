@@ -81,6 +81,38 @@ def get_subnet_from_interface_ip(rt_object, dpid, interface_ip):
   return ""
 
 ########################################## ARP functions ##########################################
+def generate_arp_request(rt_object, dpid, endpoint_ip, destination_ip, packet, packet_in):
+  """
+  Composes and sends arp request.
+  @param:   rt_object - controller object
+  @param:   packet - ethernet packet (in this case, packet.next = arp packet)
+  @param:   packet_in - ofp_packet_in object (switch to controller due to table miss)
+  """
+  print("GENERATE_ARP_REQUEST(): DPID %s from SOURCE IP %s to DEST IP %s." % (dpid, str(packet.next.srcip), destination_ip))
+  arp_req = arp()
+  arp_req.hwtype = arp_req.HW_TYPE_ETHERNET
+  arp_req.prototype = arp_req.PROTO_TYPE_IP
+  arp_req.hwlen = 6
+  arp_req.protolen = arp_req.protolen
+  arp_req.opcode = arp_req.REQUEST
+  arp_req.hwdst = ETHER_BROADCAST
+  arp_req.protodst = IPAddr(destination_ip)
+#   arp_req.hwsrc = EthAddr(packet.src)
+  ret_subnet = get_subnet_from_interface_ip(rt_object, dpid, packet.payload.protodst)
+  arp_req.hwsrc =  rt_object.routing_table[dpid][get_subnet(rt_object, dpid, ret_subnet)]["mac_interface"]
+#   arp_req.protosrc = IPAddr(packet.next.srcip)
+    # make source the interface for this route
+  arp_req.protosrc = IPAddr(rt_object.routing_table[dpid][get_subnet(rt_object, dpid, endpoint_ip)]["router_interface"])
+  eth = ethernet(type=ethernet.ARP_TYPE, src=packet.src, dst=ETHER_BROADCAST)
+  eth.set_payload(arp_req)
+  msg = of.ofp_packet_out()
+  msg.data = eth.pack()
+  msg.actions.append(of.ofp_action_output(port = rt_object.routing_table[dpid][get_subnet(rt_object, dpid, packet.next.dstip)]["port"]))
+  msg.in_port = packet_in.in_port
+  rt_object.connections[dpid].send(msg)
+
+  print("GENERATE_ARP_REQUEST(): DPID %s Sending ARP Request on behalf of host at IP %s from this IP %s on port %d." % (dpid, arp_req.protosrc, str(arp_req.protosrc), packet_in.in_port))
+
 def generate_arp_reply(rt_object, dpid, packet, packet_in): 
   arp_reply = arp() 
   arp_reply.opcode = arp.REPLY 
@@ -168,36 +200,6 @@ def arp_handler(rt_object, dpid, packet, packet_in):
 
     # release buffer
     release_buffer(rt_object, dpid, packet.payload.protosrc)
-
-def generate_arp_request(rt_object, dpid, endpoint_ip, destination_ip, packet, packet_in):
-  """
-  Composes and sends arp request.
-  @param:   rt_object - controller object
-  @param:   packet - ethernet packet (in this case, packet.next = arp packet)
-  @param:   packet_in - ofp_packet_in object (switch to controller due to table miss)
-  """
-  print("GENERATE_ARP_REQUEST(): DPID %s from SOURCE IP %s to DEST IP %s." % (dpid, str(packet.next.srcip), destination_ip))
-  arp_req = arp()
-  arp_req.hwtype = arp_req.HW_TYPE_ETHERNET
-  arp_req.prototype = arp_req.PROTO_TYPE_IP
-  arp_req.hwlen = 6
-  arp_req.protolen = arp_req.protolen
-  arp_req.opcode = arp_req.REQUEST
-  arp_req.hwdst = ETHER_BROADCAST
-  arp_req.protodst = IPAddr(destination_ip)
-  arp_req.hwsrc = EthAddr(packet.src)
-#   arp_req.protosrc = IPAddr(packet.next.srcip)
-    # make source the interface for this route
-  arp_req.protosrc = IPAddr(rt_object.routing_table[dpid][get_subnet(rt_object, dpid, endpoint_ip)]["router_interface"])
-  eth = ethernet(type=ethernet.ARP_TYPE, src=packet.src, dst=ETHER_BROADCAST)
-  eth.set_payload(arp_req)
-  msg = of.ofp_packet_out()
-  msg.data = eth.pack()
-  msg.actions.append(of.ofp_action_output(port = rt_object.routing_table[dpid][get_subnet(rt_object, dpid, packet.next.dstip)]["port"]))
-  msg.in_port = packet_in.in_port
-  rt_object.connections[dpid].send(msg)
-
-  print("Sending ARP Request on behalf of host at IP %s on port %d." % (packet.next.srcip, packet_in.in_port))
 
 ########################################## ICMP functions ##########################################
 def generate_icmp_reply(rt_object, dpid, packet, icmp_type):
