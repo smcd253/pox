@@ -334,7 +334,7 @@ def ipv4_handler(rt_object, dpid, packet, packet_in):
         # add a new buffer for this dstip if it does not already exist
         if destination_ip not in rt_object.buffer[dpid]:
           rt_object.buffer[dpid][destination_ip] = []
-            print("IPV4_HANDLER(): Create new buffer for dest IP %s." % (destination_ip))
+          print("IPV4_HANDLER(): Create new buffer for dest IP %s." % (destination_ip))
 
 
         # cache packet
