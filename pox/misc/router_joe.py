@@ -169,7 +169,7 @@ def arp_handler(rt_object, dpid, packet, packet_in):
     # release buffer
     release_buffer(rt_object, dpid, packet.payload.protosrc)
 
-def generate_arp_request(rt_object, dpid, destination_ip, packet, packet_in):
+def generate_arp_request(rt_object, dpid, endpoint_ip, destination_ip, packet, packet_in):
   """
   Composes and sends arp request.
   @param:   rt_object - controller object
@@ -188,7 +188,7 @@ def generate_arp_request(rt_object, dpid, destination_ip, packet, packet_in):
   arp_req.hwsrc = EthAddr(packet.src)
 #   arp_req.protosrc = IPAddr(packet.next.srcip)
     # make source the interface for this route
-  arp_req.protosrc = IPAddr(rt_object.routing_table[dpid][get_subnet(rt_object, dpid, packet.next.next.dstip)]["router_interface"])
+  arp_req.protosrc = IPAddr(rt_object.routing_table[dpid][get_subnet(rt_object, dpid, endpoint_ip)]["router_interface"])
   eth = ethernet(type=ethernet.ARP_TYPE, src=packet.src, dst=ETHER_BROADCAST)
   eth.set_payload(arp_req)
   msg = of.ofp_packet_out()
@@ -341,7 +341,7 @@ def ipv4_handler(rt_object, dpid, packet, packet_in):
         print("IPV4_HANDLER(): Destination: %s unknown. Buffer packet: %s" % (packet.next.dstip, packet_in.buffer_id))
 
         # generate arp request to learn next hop
-        generate_arp_request(rt_object, dpid, destination_ip, packet, packet_in)
+        generate_arp_request(rt_object, dpid, packet.next.dstip, destination_ip, packet, packet_in)
   
       # we've already received the arp reply, so forward to known destination
       else:
