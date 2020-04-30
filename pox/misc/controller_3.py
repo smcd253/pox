@@ -96,6 +96,9 @@ class Tutorial (object):
 
     # dictionary to contain all object types (switch or router)
     self.object_types = {}
+
+    # debug
+    self.debug = {}
     
 
   def add_new_switch(self, event):
@@ -134,6 +137,8 @@ class Tutorial (object):
         self.ip_to_mac[dpid] = {}
       if dpid not in self.ip_to_port:
         self.ip_to_port[dpid] = {}
+      if dpid not in self.debug:
+        self.debug[dpid] = ""
 
   def resend_packet(self, dpid, packet_in, out_port):
     """
