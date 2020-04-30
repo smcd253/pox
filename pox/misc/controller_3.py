@@ -25,7 +25,8 @@ from pox.lib.addresses import *
 from pox.lib.packet.icmp import *
 from pox.lib.packet.ipv4 import *
 from switch import *
-from router import *
+# from router import *
+from router_joe import *
 from collections import OrderedDict
 from pox.lib.util import dpid_to_str
 
