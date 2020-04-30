@@ -98,7 +98,7 @@ def generate_arp_request(rt_object, dpid, endpoint_ip, destination_ip, packet, p
   arp_req.hwdst = ETHER_BROADCAST
   arp_req.protodst = IPAddr(destination_ip)
 #   arp_req.hwsrc = EthAddr(packet.src)
-  arp_req.hwsrc =  rt_object.routing_table[dpid][get_subnet(rt_object, dpid, packet.next.dstip)]["mac_interface"]
+  arp_req.hwsrc =  EthAddr(rt_object.routing_table[dpid][get_subnet(rt_object, dpid, packet.next.dstip)]["mac_interface"])
 #   arp_req.protosrc = IPAddr(packet.next.srcip)
     # make source the interface for this route
   arp_req.protosrc = IPAddr(rt_object.routing_table[dpid][get_subnet(rt_object, dpid, endpoint_ip)]["router_interface"])
