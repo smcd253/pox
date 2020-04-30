@@ -48,5 +48,5 @@ def switch_handler(sw_object, dpid, packet, packet_in):
   else:
     # Flood the packet out everything but the input port
     # This part looks familiar, right?
-    print("SWITCH_HANDLER(): DPID = %s. MAC %s (corresponding to IP %s) not known. Resend to all ports." % (dpid, str(packet.dst), str(packet.payload.dstip)))
+    print("SWITCH_HANDLER(): DPID = %s. MAC %s not known. Resend to all ports." % (dpid, str(packet.dst)))
     sw_object.resend_packet(dpid, packet_in, of.OFPP_ALL)
