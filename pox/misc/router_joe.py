@@ -197,7 +197,8 @@ def arp_handler(rt_object, dpid, packet, packet_in):
     rt_object.ip_to_mac[dpid][packet.payload.protosrc] = packet.next.hwsrc 
 
     # release buffer
-    release_buffer(rt_object, dpid, packet.payload.protosrc)
+    buffer_src = IPAddr(packet.payload.protosrc)
+    release_buffer(rt_object, dpid, buffer_src)
 
 ########################################## ICMP functions ##########################################
 def generate_icmp_reply(rt_object, dpid, packet, icmp_type):
