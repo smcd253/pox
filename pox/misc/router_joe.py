@@ -182,20 +182,18 @@ def arp_handler(rt_object, dpid, packet, packet_in):
         generate_arp_reply(rt_object, dpid, packet, packet_in)
 
     # DEBUG
-    else:
+    # else:
       #print("ARP_HANDLER(): something went wrong")
-    
 
   # if this is an arp reply    
-  elif packet.next.opcode == arp.REPLY:
-    # DEBUG
-    #print("ARP_HANDLER(): Received ARP reply... learn source MAC Addr and release ip buffer.")
-    
+  elif packet.next.opcode == arp.REPLY:    
     # Learn source MAC addr of sender (next hop)
     rt_object.ip_to_mac[dpid][packet.payload.protosrc] = packet.next.hwsrc 
         
     # release buffer
     release_buffer(rt_object, dpid, packet.payload.protosrc)
+    # DEBUG
+    #print("ARP_HANDLER(): Received ARP reply... learn source MAC Addr and release ip buffer.")
 
 ########################################## ICMP functions ##########################################
 def generate_icmp_reply(rt_object, dpid, packet, icmp_type):
