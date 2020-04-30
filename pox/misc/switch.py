@@ -23,7 +23,9 @@ log = core.getLogger()
       packet_in : The packet_in object that is received from the packet forwarding switch
 """
 
+# working with formatting!
 def switch_handler(sw_object, dpid, packet, packet_in):
+  # format MACs
   src_mac = packet.src
   dst_mac = packet.dst
   if type(src_mac) is not EthAddr:
