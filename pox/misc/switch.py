@@ -39,8 +39,8 @@ def switch_handler(sw_object, dpid, packet, packet_in):
     msg = of.ofp_flow_mod()
     msg.match = of.ofp_match.from_packet(packet)
     msg.match = of.ofp_match(dl_dst = packet.dst)
-    msg.idle_timeout = 0
-    msg.hard_timeout = 0
+    msg.idle_timeout = 3600
+    msg.hard_timeout = 7200
     msg.priority = 32768 # A0
     msg.actions.append(of.ofp_action_output(port = sw_object.mac_to_port[dpid][packet.dst]))
     sw_object.connections[dpid].send(msg)
