@@ -96,10 +96,8 @@ def generate_arp_request(rt_object, dpid, endpoint_ip, destination_ip, packet, p
   arp_req.opcode = arp_req.REQUEST
   arp_req.hwdst = ETHER_BROADCAST
   arp_req.protodst = IPAddr(destination_ip)
-#   arp_req.hwsrc = EthAddr(packet.src)
   arp_req.hwsrc =  EthAddr(rt_object.routing_table[dpid][get_subnet(rt_object, dpid, packet.next.dstip)]["mac_interface"])
-#   arp_req.protosrc = IPAddr(packet.next.srcip)
-    # make source the interface for this route
+  # make source the interface for this route
   arp_req.protosrc = IPAddr(rt_object.routing_table[dpid][get_subnet(rt_object, dpid, endpoint_ip)]["router_interface"])
   eth = ethernet(type=ethernet.ARP_TYPE, src=packet.src, dst=ETHER_BROADCAST)
   eth.set_payload(arp_req)
@@ -195,12 +193,6 @@ def arp_handler(rt_object, dpid, packet, packet_in):
     
     # Learn source MAC addr of sender (next hop)
     rt_object.ip_to_mac[dpid][packet.payload.protosrc] = packet.next.hwsrc 
-    
-    # DEBUG
-    if rt_object.debug[dpid] == packet.payload.protosrc:
-        print("ARP_HANDLER(): destination_ip == packet.payload.protosrc! release_buffer() should work.")
-    else:
-        print("ARP_HANDLER(): destination_ip != packet.payload.protosrc! release_buffer() should NOT work.")
         
     # release buffer
     release_buffer(rt_object, dpid, packet.payload.protosrc)
@@ -340,7 +332,6 @@ def ipv4_handler(rt_object, dpid, packet, packet_in):
         # add a new buffer for this dstip if it does not already exist
         if destination_ip not in rt_object.buffer[dpid]:
           rt_object.buffer[dpid][destination_ip] = []
-          rt_object.debug[dpid] = destination_ip
           print("IPV4_HANDLER(): Create new buffer for dest IP %s." % (destination_ip))
 
 
