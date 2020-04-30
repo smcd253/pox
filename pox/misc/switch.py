@@ -24,32 +24,29 @@ log = core.getLogger()
 """
 
 def switch_handler(sw_object, dpid, packet, packet_in):
-  format_src_mac_addr_str = str(EthAddr(packet.src))
-  format_dst_mac_addr_str = str(EthAddr(packet.dst))
-
-  if format_src_mac_addr_str not in sw_object.mac_to_port[dpid]:
-    print("Learning that " + format_src_mac_addr_str + " is attached at port " + str(packet_in.in_port))
-    sw_object.mac_to_port[dpid][format_src_mac_addr_str] = packet_in.in_port
+  if packet.src not in sw_object.mac_to_port[dpid]:
+    print("Learning that " + str(packet.src) + " is attached at port " + str(packet_in.in_port))
+    sw_object.mac_to_port[dpid][packet.src] = packet_in.in_port
 
   # if the port associated with the destination MAC of the packet is known:
-  if format_dst_mac_addr_str in sw_object.mac_to_port[dpid]:
+  if packet.dst in sw_object.mac_to_port[dpid]:
     # Send packet out the associated port
-    print("Destination " + str(format_dst_mac_addr_str) + " known. Forward msg to port " + str(sw_object.mac_to_port[dpid][format_dst_mac_addr_str]) + ".")
-    sw_object.resend_packet(dpid, packet_in, sw_object.mac_to_port[dpid][format_dst_mac_addr_str])
+    print("Destination " + str(packet.dst) + " known. Forward msg to port " + str(sw_object.mac_to_port[dpid][packet.dst]) + ".")
+    sw_object.resend_packet(dpid, packet_in, sw_object.mac_to_port[dpid][packet.dst])
 
     # flow mod
-    print("Installing flow..." + str(sw_object.mac_to_port[dpid][format_dst_mac_addr_str]))
+    print("Installing flow..." + str(sw_object.mac_to_port[dpid][packet.dst]))
     msg = of.ofp_flow_mod()
     msg.match = of.ofp_match.from_packet(packet)
-    msg.match = of.ofp_match(dl_dst = format_dst_mac_addr_str)
+    msg.match = of.ofp_match(dl_dst = packet.dst)
     msg.idle_timeout = 3600
     msg.hard_timeout = 7200
     msg.priority = 32768 # A0
-    msg.actions.append(of.ofp_action_output(port = sw_object.mac_to_port[dpid][format_dst_mac_addr_str]))
+    msg.actions.append(of.ofp_action_output(port = sw_object.mac_to_port[dpid][packet.dst]))
     sw_object.connections[dpid].send(msg)
 
   else:
     # Flood the packet out everything but the input port
     # This part looks familiar, right?
-    print("SWITCH_HANDLER(): DPID = %s. MAC %s not known. Resend to all ports." % (dpid, str(format_dst_mac_addr_str)))
+    print("SWITCH_HANDLER(): DPID = %s. MAC %s not known. Resend to all ports." % (dpid, str(packet.dst)))
     sw_object.resend_packet(dpid, packet_in, of.OFPP_ALL)
