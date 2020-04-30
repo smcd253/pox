@@ -79,7 +79,7 @@ def get_subnet_from_interface_ip(rt_object, dpid, interface_ip):
     if(table["router_interface"] == interface_ip):
       return subnet
   return ""
-  
+
 ########################################## ARP functions ##########################################
 def generate_arp_reply(rt_object, dpid, packet, packet_in): 
   arp_reply = arp() 
@@ -322,6 +322,7 @@ def ipv4_handler(rt_object, dpid, packet, packet_in):
       next_hop = rt_object.routing_table[dpid][get_subnet(rt_object, dpid, packet.next.dstip)]["next_hop"]
       if(next_hop != "0.0.0.0"):
         destination_ip = next_hop
+        print("IPV4_HANLDER(): destination_ip is next hop")
       else:
         destination_ip = packet.next.dstip
 
