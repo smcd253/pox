@@ -122,7 +122,7 @@ def generate_arp_reply(rt_object, dpid, packet, packet_in):
   eth = ethernet() 
   eth.type = ethernet.ARP_TYPE 
   print("GENERATE_ARP_REPLY(): packet.payload.protosrc = %s." % (str(packet.payload.protosrc)))
-  eth.dst = EthAddr(rt_object.ip_to_mac[dpid][packet.payload.protosrc])
+  eth.dst = EthAddr(rt_object.ip_to_mac[dpid][str(packet.payload.protosrc)])
   # reply with this interface's mac addr
   print(str(packet.payload.protodst))
 
@@ -172,7 +172,7 @@ def arp_handler(rt_object, dpid, packet, packet_in):
       generate_arp_reply(rt_object, dpid, packet, packet_in)
 
       # DEBUG
-      print("ARP_HANDLER(): Generate ARP Reply: answering MAC %s on port %d" % (rt_object.ip_to_mac[dpid][packet.payload.protosrc], packet_in.in_port))
+      print("ARP_HANDLER(): Generate ARP Reply: answering MAC %s on port %d" % (rt_object.ip_to_mac[dpid][str(packet.payload.protosrc)], packet_in.in_port))
 
     # if destination ip (packet.payload.protodst) is on same network and this network 
     # (longest prefix match) --> act like switch
@@ -194,7 +194,7 @@ def arp_handler(rt_object, dpid, packet, packet_in):
     print("ARP_HANDLER(): Received ARP reply... learn source MAC Addr and release ip buffer.")
     
     # Learn source MAC addr of sender (next hop)
-    rt_object.ip_to_mac[dpid][packet.payload.protosrc] = packet.next.hwsrc 
+    rt_object.ip_to_mac[dpid][str(packet.payload.protosrc)] = packet.next.hwsrc 
         
     # release buffer
     release_buffer(rt_object, dpid, packet.payload.protosrc)
