@@ -121,7 +121,8 @@ def generate_arp_reply(rt_object, dpid, packet, packet_in):
   arp_reply.protodst = packet.payload.protosrc 
   eth = ethernet() 
   eth.type = ethernet.ARP_TYPE 
-  eth.dst = rt_object.ip_to_mac[dpid][packet.payload.protosrc]
+  print("GENERATE_ARP_REPLY(): packet.payload.protosrc = %s." % (str(packet.payload.protosrc)))
+  eth.dst = EthAddr(rt_object.ip_to_mac[dpid][packet.payload.protosrc])
   # reply with this interface's mac addr
   print(str(packet.payload.protodst))
 
@@ -149,6 +150,7 @@ def arp_handler(rt_object, dpid, packet, packet_in):
 
   # check if in rt_object.ip_to_mac[dpid], if not add
   if(packet.payload.protosrc not in rt_object.ip_to_mac[dpid]):
+      print("ARP_HANDLER(): Learning IP %s corresponds to MAC %s." % (str(packet.payload.protosrc), str(packet.src)))
     rt_object.ip_to_mac[dpid][packet.payload.protosrc] = packet.src
   # same with ip_to_port
   if(packet.payload.protosrc not in rt_object.ip_to_port[dpid]):
