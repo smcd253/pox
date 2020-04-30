@@ -187,7 +187,8 @@ def generate_arp_request(rt_object, dpid, destination_ip, packet, packet_in):
   arp_req.protodst = IPAddr(destination_ip)
   arp_req.hwsrc = EthAddr(packet.src)
 #   arp_req.protosrc = IPAddr(packet.next.srcip)
-  arp_req.protosrc = IPAddr(rt_object.routing_table[dpid][get_subnet(rt_object, dpid, packet.next.dstip)]["router_interface"])
+    # make source the interface for this route
+  arp_req.protosrc = IPAddr(rt_object.routing_table[dpid][get_subnet(rt_object, dpid, packet.next.next.dstip)]["router_interface"])
   eth = ethernet(type=ethernet.ARP_TYPE, src=packet.src, dst=ETHER_BROADCAST)
   eth.set_payload(arp_req)
   msg = of.ofp_packet_out()
