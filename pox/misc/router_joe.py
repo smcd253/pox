@@ -197,8 +197,7 @@ def arp_handler(rt_object, dpid, packet, packet_in):
     rt_object.ip_to_mac[dpid][packet.payload.protosrc] = packet.next.hwsrc 
 
     # release buffer
-    buffer_src = IPAddr(packet.payload.protosrc)
-    release_buffer(rt_object, dpid, buffer_src)
+    release_buffer(rt_object, dpid, packet.payload.protosrc)
 
 ########################################## ICMP functions ##########################################
 def generate_icmp_reply(rt_object, dpid, packet, icmp_type):
@@ -335,6 +334,8 @@ def ipv4_handler(rt_object, dpid, packet, packet_in):
         # add a new buffer for this dstip if it does not already exist
         if destination_ip not in rt_object.buffer[dpid]:
           rt_object.buffer[dpid][destination_ip] = []
+            print("IPV4_HANDLER(): Create new buffer for dest IP %s." % (destination_ip))
+
 
         # cache packet
         buffer_entry = {"buffer_id": packet_in.buffer_id, "port": packet_in.in_port}
