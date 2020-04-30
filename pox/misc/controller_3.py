@@ -105,7 +105,6 @@ class Tutorial (object):
     dpid = dpid_to_str(event.connection.dpid)
     dpid_compare = int(dpid.split("-")[5])
     # DEBUG
-    print("dpid_compare = %d" % (dpid_compare))
 
     # populate routing tables by dpid
     if(dpid_compare == 1):
@@ -118,8 +117,14 @@ class Tutorial (object):
     # populate object_types[dpid] to help with other data structures
     if(dpid_compare >= 1 and dpid_compare <= 3):
       self.object_types[dpid] = "router"
+      # DEBUG
+      print("CONTROLLER(%s): ip_to_mac = " % (dpid))
+      print(self.ip_to_mac[dpid])
     elif(dpid_compare >= 4 and dpid_compare <= 8):
       self.object_types[dpid] = "switch" 
+      # DEBUG
+      print("CONTROLLER(%s): mac_to_port = " % (dpid))
+      print(self.mac_to_port[dpid])
 
     if dpid not in self.connections:
         self.connections[dpid] = event.connection
