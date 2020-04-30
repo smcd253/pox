@@ -24,6 +24,17 @@ log = core.getLogger()
 """
 
 def switch_handler(sw_object, dpid, packet, packet_in):
+  src_mac = packet.src
+  dst_mac = packet.dst
+  if type(src_mac) is not EthAddr:
+    src_mac = EthAddr(src_mac)
+  src_mac_str = str(src_mac)
+  if type(dst_mac) is not EthAddr:
+    src_mac = EthAddr(dst_mac)
+  dst_mac_str = str(dst_mac)
+
+  print("SWITCH_HANDLER(%s): src_mac_str = %s | dst_mac_str = %s" % (dpid, src_mac_str, dst_mac_str))
+
   if packet.src not in sw_object.mac_to_port[dpid]:
     print("Learning that " + str(packet.src) + " is attached at port " + str(packet_in.in_port))
     sw_object.mac_to_port[dpid][packet.src] = packet_in.in_port
