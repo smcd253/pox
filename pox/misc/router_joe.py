@@ -97,7 +97,7 @@ def generate_arp_reply(rt_object, dpid, packet, packet_in):
   # reply with this interface's mac addr
   print(str(packet.payload.protodst))
 
-  ret_subnet= get_subnet_from_interface_ip(rt_object, dpid, packet.payload.protodst)
+  ret_subnet = get_subnet_from_interface_ip(rt_object, dpid, packet.payload.protodst)
 
   eth.src =  rt_object.routing_table[dpid][get_subnet(rt_object, dpid, ret_subnet)]["mac_interface"] #Here is after r1 192.168.0.1
   print(str(eth.src ))
@@ -138,7 +138,7 @@ def arp_handler(rt_object, dpid, packet, packet_in):
   
   if packet.next.opcode == arp.REQUEST:
     # if destination ip is the router (default gw), generate arp response
-    if (arp_dst_ip == rt_object.routing_table[dpid][get_subnet(rt_object, dpid, packet.payload.protosrc)]["router_interface"]):
+    if (arp_dst_ip == rt_object.routing_table[dpid][get_subnet(rt_object, dpid, get_subnet_from_interface_ip(rt_object, dpid, packet.payload.protodst))]["router_interface"]):
       generate_arp_reply(rt_object, dpid, packet, packet_in)
 
       # DEBUG
