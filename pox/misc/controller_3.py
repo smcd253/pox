@@ -118,13 +118,15 @@ class Tutorial (object):
     if(dpid_compare >= 1 and dpid_compare <= 3):
       self.object_types[dpid] = "router"
       # DEBUG
-      print("CONTROLLER(%s): ip_to_mac = " % (dpid))
-      print(self.ip_to_mac[dpid])
+      if dpid in self.ip_to_mac:
+        print("CONTROLLER(%s): ip_to_mac = " % (dpid))
+        print(self.ip_to_mac[dpid])
     elif(dpid_compare >= 4 and dpid_compare <= 8):
       self.object_types[dpid] = "switch" 
       # DEBUG
-      print("CONTROLLER(%s): mac_to_port = " % (dpid))
-      print(self.mac_to_port[dpid])
+      if dpid in self.mac_to_port:
+        print("CONTROLLER(%s): mac_to_port = " % (dpid))
+        print(self.mac_to_port[dpid])
 
     if dpid not in self.connections:
         self.connections[dpid] = event.connection
