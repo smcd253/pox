@@ -74,6 +74,13 @@ def validate_ip(rt_object, dpid, ip):
       return True
   return False
 
+
+def get_subnet_from_interface_ip(rt_object, dpid, interface_ip): 
+  for subnet, table in rt_object.routing_table[dpid]:
+    if(table["router_interface"] == interface_ip):
+      return subnet
+  return ""
+
 ########################################## ARP functions ##########################################
 def generate_arp_reply(rt_object, dpid, packet, packet_in): 
   arp_reply = arp() 
