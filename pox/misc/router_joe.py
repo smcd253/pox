@@ -273,12 +273,12 @@ def send_ip_packet(rt_object, dpid, buf_id, inport, dstip):
   @param:   dstip - destination ip
   """
   msg = of.ofp_packet_out(buffer_id=buf_id, in_port=inport)
-  msg.actions.append(of.ofp_action_dl_addr.set_dst(rt_object.ip_to_mac[dpid][dstip]))
-  msg.actions.append(of.ofp_action_output(port = rt_object.ip_to_port[dpid][dstip]))
+  msg.actions.append(of.ofp_action_dl_addr.set_dst(rt_object.ip_to_mac[dpid][str(dstip)]))
+  msg.actions.append(of.ofp_action_output(port = rt_object.ip_to_port[dpid][str(dstip)]))
   rt_object.connections[dpid].send(msg)
 
   # DEBUG
-#   print("SEND_IP_PACKET(): Sending BUFFER_ID %d from IN_PORT %d to IP %s at MAC %s on OUT_PORT %d." % (buf_id, inport, str(dstip), str(rt_object.ip_to_mac[dpid][dstip]), rt_object.ip_to_port[dpid][dstip]))
+#   print("SEND_IP_PACKET(): Sending BUFFER_ID %d from IN_PORT %d to IP %s at MAC %s on OUT_PORT %d." % (buf_id, inport, str(dstip), str(rt_object.ip_to_mac[dpid][str(dstip)]), rt_object.ip_to_port[dpid][str(dstip)]))
 
 def release_buffer(rt_object, dpid, dstip):
   """
@@ -291,7 +291,7 @@ def release_buffer(rt_object, dpid, dstip):
     del rt_object.buffer[dpid][str(dstip)][0]
   
   # DEBUG
-  # print("RELEASE_BUFFER(): buffer[%s] = %s" % (dstip, rt_object.buffer[dpid][dstip]))
+  # print("RELEASE_BUFFER(): buffer[%s] = %s" % (dstip, rt_object.buffer[dpid][str(dstip)]))
   print("RELEASE_BUFFER(): Not logging right now. Uncomment above to get more info.")
 
 def ipv4_handler(rt_object, dpid, packet, packet_in):
