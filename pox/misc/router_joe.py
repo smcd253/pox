@@ -150,7 +150,7 @@ def arp_handler(rt_object, dpid, packet, packet_in):
 
   # check if in rt_object.ip_to_mac[dpid], if not add
   if(packet.payload.protosrc not in rt_object.ip_to_mac[dpid]):
-      print("ARP_HANDLER(): Learning IP %s corresponds to MAC %s." % (str(packet.payload.protosrc), str(packet.src)))
+    print("ARP_HANDLER(): Learning IP %s corresponds to MAC %s." % (str(packet.payload.protosrc), str(packet.src)))
     rt_object.ip_to_mac[dpid][packet.payload.protosrc] = packet.src
   # same with ip_to_port
   if(packet.payload.protosrc not in rt_object.ip_to_port[dpid]):
