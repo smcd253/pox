@@ -194,7 +194,7 @@ def arp_handler(rt_object, dpid, packet, packet_in):
     print("ARP_HANDLER(): Received ARP reply... learn source MAC Addr and release ip buffer.")
     
     # Learn source MAC addr of sender (next hop)
-    rt_object.ip_to_mac[dpid][str(packet.payload.protosrc)] = packet.next.hwsrc 
+    # rt_object.ip_to_mac[dpid][str(packet.payload.protosrc)] = packet.next.hwsrc 
         
     # release buffer
     release_buffer(rt_object, dpid, packet.payload.protosrc)
