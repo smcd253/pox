@@ -338,7 +338,7 @@ def ipv4_handler(rt_object, dpid, packet, packet_in):
         # cache packet
         buffer_entry = {"buffer_id": packet_in.buffer_id, "port": packet_in.in_port}
         rt_object.buffer[dpid][destination_ip].append(buffer_entry)
-        print("IPV4_HANDLER(): Destination: %s unknown. Buffer packet: %s" % (packet.next.dstip, packet_in.buffer_id))
+        print("IPV4_HANDLER(): Destination: %s unknown. Buffer packet: %s" % (destination_ip, packet_in.buffer_id))
 
         # generate arp request to learn next hop
         generate_arp_request(rt_object, dpid, packet.next.dstip, destination_ip, packet, packet_in)
