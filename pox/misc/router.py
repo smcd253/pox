@@ -163,11 +163,6 @@ def arp_handler(rt_object, dpid, packet, packet_in):
       if(packet.dst == rt_object.routing_table[dpid][get_subnet(rt_object, dpid, arp_dst_ip)]["mac_interface"]):
         generate_arp_reply(rt_object, dpid, packet, packet_in)
 
-    # DEBUG
-    else:
-      # print("ARP_HANDLER(): something went wrong")
-   
-
   # if this is an arp reply    
   elif packet.next.opcode == arp.REPLY:
     # print("ARP_HANDLER(): Received ARP reply... learn source MAC Addr and release ip buffer.")
