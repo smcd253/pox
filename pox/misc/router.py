@@ -339,12 +339,8 @@ def router_handler(rt_object, dpid, packet, packet_in):
   @param:   packet - ethernet packet (in this case, packet.next = arp packet)
   @param:   packet_in - ofp_packet_in object (switch to controller due to table miss)
   """
-  # if packet is arp
   if isinstance(packet.next, arp):
-    print("We have recived an arp pkt")
     arp_handler(rt_object, dpid, packet, packet_in)
 
-  # else --> act like router
   elif isinstance(packet.next, ipv4):
-    print("We have recived an ipv4 pkt")
     ipv4_handler(rt_object, dpid, packet, packet_in)
