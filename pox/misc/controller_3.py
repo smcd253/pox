@@ -117,16 +117,8 @@ class Tutorial (object):
     # populate object_types[dpid] to help with other data structures
     if(dpid_compare >= 1 and dpid_compare <= 3):
       self.object_types[dpid] = "router"
-      # DEBUG
-      if dpid in self.ip_to_mac:
-        print("ROUTER(%s): ip_to_mac = " % (dpid))
-        print(self.ip_to_mac[dpid])
     elif(dpid_compare >= 4 and dpid_compare <= 8):
       self.object_types[dpid] = "switch" 
-      # DEBUG
-      if dpid in self.mac_to_port:
-        print("SWITCH(%s): mac_to_port = " % (dpid))
-        print(self.mac_to_port[dpid])
 
     if dpid not in self.connections:
         self.connections[dpid] = event.connection
@@ -164,9 +156,6 @@ class Tutorial (object):
     # add new switches and routers for every connection made
     self.add_new_switch(event)
     dpid = dpid_to_str(event.connection.dpid)
-
-    if(self.dpid != dpid):
-      print(" !!!!! HANDLE_PACKETIN() DPID %s != self.DPID %s !!!!! " % (dpid, self.dpid))
 
     packet = event.parsed # This is the parsed packet data.
     if not packet.parsed:
