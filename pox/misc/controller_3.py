@@ -119,13 +119,13 @@ class Tutorial (object):
       self.object_types[dpid] = "router"
       # DEBUG
       if dpid in self.ip_to_mac:
-        print("CONTROLLER(%s): ip_to_mac = " % (dpid))
+        print("ROUTER(%s): ip_to_mac = " % (dpid))
         print(self.ip_to_mac[dpid])
     elif(dpid_compare >= 4 and dpid_compare <= 8):
       self.object_types[dpid] = "switch" 
       # DEBUG
       if dpid in self.mac_to_port:
-        print("CONTROLLER(%s): mac_to_port = " % (dpid))
+        print("SWITCH(%s): mac_to_port = " % (dpid))
         print(self.mac_to_port[dpid])
 
     if dpid not in self.connections:
@@ -163,6 +163,10 @@ class Tutorial (object):
     """
     # add new switches and routers for every connection made
     self.add_new_switch(event)
+    dpid = dpid_to_str(event.connection.dpid)
+
+    if(self.dpid != dpid):
+      print(" !!!!! HANDLE_PACKETIN() DPID %s != self.DPID %s !!!!! " % (dpid, self.dpid))
 
     packet = event.parsed # This is the parsed packet data.
     if not packet.parsed:
@@ -182,10 +186,12 @@ class Tutorial (object):
     else: (if it is not switch, it means router. We have only two kinds of devices, one is switch and one is router)
       invoke router_handler and pass the object (i.e., self) and the packet and packet_in
     """
-    if (self.object_types[self.dpid] == "switch"):
-      switch_handler(self, self.dpid, packet, packet_in)
-    elif (self.object_types[self.dpid] == "router"):
-      router_handler(self, self.dpid, packet, packet_in)
+    if (self.object_types[dpid] == "switch"):
+      print("********************* SWITCH(%s) ***********************" % (dpid))
+      switch_handler(self, dpid, packet, packet_in)
+    elif (self.object_types[dpid] == "router"):
+      print("********************* ROUTER(%s) ***********************" % (dpid))
+      router_handler(self, dpid, packet, packet_in)
 
 def launch ():
   """
