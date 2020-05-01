@@ -126,16 +126,20 @@ def generate_arp_request(rt_object, dpid, endpoint_ip, destination_ip_str, packe
   print("GENERATE_ARP_REQUEST(): DPID %s Sending ARP Request on behalf of host at IP %s from this IP %s and MAC %s on port %d to IP %s." % (dpid, packet.next.srcip, str(arp_req.protosrc), str(arp_req.hwsrc), packet_in.in_port, destination_ip_str))
 
 def generate_arp_reply(rt_object, dpid, packet, packet_in): 
+  print("GENERATE_ARP_REPLY(%s): destination ip = %s (SHOULD BE INTERFACE)." % (dpid, str(packet.payload.protodst)))
+  print("GENERATE_ARP_REPLY(%s): source ip = %s (SHOULD BE NEXT HOP OR HOST)." % (dpid, str(packet.payload.protosrc)))
+
   arp_reply = arp() 
   arp_reply.opcode = arp.REPLY 
   arp_reply.hwsrc = packet.dst 
-  #Destination now is the source MAC address 
   arp_reply.hwdst = packet.src 
+  print("GENERATE_ARP_REPLY(%s): ARP destination MAC = %s (SHOULD BE INTERFACE)." % (dpid, str(packet.payload.protodst)))
+  print("GENERATE_ARP_REPLY(%s): source ip = %s (SHOULD BE NEXT HOP OR HOST)." % (dpid, str(packet.payload.protosrc)))
+
   arp_reply.protosrc = packet.payload.protodst 
   arp_reply.protodst = packet.payload.protosrc 
   eth = ethernet() 
   eth.type = ethernet.ARP_TYPE 
-  print("GENERATE_ARP_REPLY(): packet.payload.protosrc = %s." % (str(packet.payload.protosrc)))
   eth.dst = EthAddr(rt_object.ip_to_mac[dpid][str(packet.payload.protosrc)])
   # reply with this interface's mac addr
   print(str(packet.payload.protodst))
@@ -180,7 +184,9 @@ def arp_handler(rt_object, dpid, packet, packet_in):
   
   if packet.next.opcode == arp.REQUEST:
     # if destination ip is the router (default gw), generate arp response
-    if (arp_dst_ip == rt_object.routing_table[dpid][get_subnet(rt_object, dpid, get_subnet_from_interface_ip(rt_object, dpid, packet.payload.protodst))]["router_interface"]):
+    if (arp_dst_ip == rt_object.routing_table[dpid][get_subnet(rt_object, dpid, get_subnet_from_interface_ip(rt_object, dpid, packet.payload.protodst))]["router_interface"] or
+        get_subnet(rt_object, dpid, arp_dst_ip) == "192.168.0.0" or
+        get_subnet(rt_object, dpid, arp_dst_ip) == "192.168.0.4"):
       generate_arp_reply(rt_object, dpid, packet, packet_in)
 
       # DEBUG
