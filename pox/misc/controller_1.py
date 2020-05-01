@@ -19,11 +19,11 @@ This is the controller file corresponding to scenario 1.
 
 from pox.core import core
 import pox.openflow.libopenflow_01 as of
-# from pox.lib.packet.arp import arp
-# from pox.lib.packet.ethernet import *
-# from pox.lib.addresses import *
-# from pox.lib.packet.icmp import *
-# from pox.lib.packet.ipv4 import *
+from pox.lib.packet.arp import arp
+from pox.lib.packet.ethernet import *
+from pox.lib.addresses import *
+from pox.lib.packet.icmp import *
+from pox.lib.packet.ipv4 import *
 from pox.lib.util import dpid_to_str
 from switch import *
 # from router import *
