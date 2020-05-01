@@ -26,7 +26,7 @@ log = core.getLogger()
 """
 
 ########################################## IP parsing functions ##########################################
-#return netwrok addr as a string
+#return network addr as string
 def LPM(mask, ip):
     x=0
     ip_bin=0
@@ -277,13 +277,11 @@ def ipv4_handler(rt_object, dpid, packet, packet_in):
         # add a new buffer for this dstip if it does not already exist
         if destination_ip not in rt_object.buffer[dpid]:
           rt_object.buffer[dpid][destination_ip] = []
-          # print("IPV4_HANDLER(): Create new buffer for dest IP %s." % (destination_ip))
 
 
         # cache packet
         buffer_entry = {"buffer_id": packet_in.buffer_id, "port": packet_in.in_port}
         rt_object.buffer[dpid][destination_ip].append(buffer_entry)
-        # print("IPV4_HANDLER(): Destination: %s unknown. Buffer packet: %s" % (destination_ip, packet_in.buffer_id))
 
         # generate arp request to learn next hop
         generate_arp_request(rt_object, dpid, packet.next.dstip, destination_ip, packet, packet_in)
