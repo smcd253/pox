@@ -104,7 +104,6 @@ class Tutorial (object):
     """
     dpid = dpid_to_str(event.connection.dpid)
     dpid_compare = int(dpid.split("-")[5])
-    # DEBUG
 
     # populate routing tables by dpid
     if(dpid_compare == 1):
@@ -176,10 +175,8 @@ class Tutorial (object):
       invoke router_handler and pass the object (i.e., self) and the packet and packet_in
     """
     if (self.object_types[dpid] == "switch"):
-      print("********************* SWITCH(%s) ***********************" % (dpid))
       switch_handler(self, dpid, packet, packet_in)
     elif (self.object_types[dpid] == "router"):
-      print("********************* ROUTER(%s) ***********************" % (dpid))
       router_handler(self, dpid, packet, packet_in)
 
 def launch ():

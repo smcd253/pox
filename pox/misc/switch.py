@@ -53,17 +53,13 @@ def switch_handler(sw_object, dpid, packet, packet_in):
   if type(dst_mac) is not EthAddr:
     src_mac = EthAddr(dst_mac)
   dst_mac_str = str(dst_mac)
-  print("SWITCH_HANDLER(%s): src_mac_str = %s | dst_mac_str = %s" % (dpid, src_mac_str, dst_mac_str))
   if src_mac_str not in sw_object.mac_to_port[dpid]:
-    print("SWITCH_HANDLER(%s): Learning that SOURCE MAC %s is attached to port %d" % (dpid, src_mac_str, packet_in.in_port))
     sw_object.mac_to_port[dpid][src_mac_str] = packet_in.in_port
   # if the port associated with the destination MAC of the packet is known:
   if dst_mac_str in sw_object.mac_to_port[dpid]:
     # Send packet out the associated port
-    print("SWITCH_HANDLER(%s): DESINTATION MAC %s known. Forward to port %d" % (dpid, dst_mac_str, sw_object.mac_to_port[dpid][dst_mac_str]))
     sw_object.resend_packet(dpid, packet_in, sw_object.mac_to_port[dpid][dst_mac_str])
     # flow mod
-    print("SWITCH_HANDLER(%s): Installing flow... src_mac_str = %s | dst_mac_str = %s" % (dpid, src_mac_str, dst_mac_str))
     msg = of.ofp_flow_mod()
     msg.match = of.ofp_match.from_packet(packet)
     msg.match = of.ofp_match(dl_dst = dst_mac)
@@ -75,5 +71,4 @@ def switch_handler(sw_object, dpid, packet, packet_in):
   else:
     # Flood the packet out everything but the input port
     # This part looks familiar, right?
-    print("SWITCH_HANDLER(%s): MAC %s not known. Resend to all ports." % (dpid, str(dst_mac_str)))
     sw_object.resend_packet(dpid, packet_in, of.OFPP_ALL)

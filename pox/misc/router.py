@@ -14,8 +14,6 @@ import math
 
 log = core.getLogger()
 
-# TODO: modify all datastructures and functions to take dpid
-
 """
 [555 Comments]
   Function : router_handler
@@ -107,14 +105,12 @@ def generate_arp_request(rt_object, dpid, endpoint_ip, destination_ip, packet, p
   msg.in_port = packet_in.in_port
   rt_object.connections[dpid].send(msg)
 
-  print("GENERATE_ARP_REQUEST():"+"    Src Mac:  "+ str(arp_req.hwsrc) +"    Dst Mac:  " + str(arp_req.hwdst) + "    Src Ip:  " + str(arp_req.protosrc) + "    Dst Ip:  "+ str(arp_req.protodst))
-
 def generate_arp_reply(rt_object, dpid, packet, packet_in):
   arp_reply = arp()
   arp_reply.opcode = arp.REPLY
   ret_subnet = get_subnet_from_interface_ip(rt_object, dpid, packet.payload.protodst)
   arp_reply.hwsrc =  packet.dst
-  #Destination now is the source MAC address
+  # Destination now is the source MAC address
   arp_reply.hwdst = packet.src
   arp_reply.protosrc = packet.payload.protodst
   arp_reply.protodst = packet.payload.protosrc
@@ -129,7 +125,6 @@ def generate_arp_reply(rt_object, dpid, packet, packet_in):
   action = of.ofp_action_output(port = packet_in.in_port)
   msg.actions.append(action)
   rt_object.connections[dpid].send(msg)
-  print("GENERATE_ARP_REPLY():"+"    Src Mac:  "+ str(eth.src) +"    Dst Mac:  " + str(eth.dst) + "    Src Ip:  " + str(arp_reply.protosrc) + "    Dst Ip:  "+ str(arp_reply.protodst))
 
 def arp_handler(rt_object, dpid, packet, packet_in):
   """
@@ -143,12 +138,10 @@ def arp_handler(rt_object, dpid, packet, packet_in):
   if(str(packet.payload.protosrc) not in rt_object.ip_to_mac[dpid]):
     rt_object.ip_to_mac[dpid][str(packet.payload.protosrc)] = str(packet.src)
   # same with ip_to_port
-
   if(str(packet.payload.protosrc) not in rt_object.ip_to_port[dpid]):
     rt_object.ip_to_port[dpid][str(packet.payload.protosrc)] = packet_in.in_port
 
   # handle arp request
-  # NOTE: this produces the same output. what is going on??
   arp_dst_ip = str(packet.payload.protodst)
   arp_src_ip = str(packet.payload.protosrc)
 
@@ -158,14 +151,11 @@ def arp_handler(rt_object, dpid, packet, packet_in):
      generate_arp_reply(rt_object, dpid, packet, packet_in)
 
     elif same_subnet(rt_object, dpid, arp_dst_ip, arp_src_ip):
-      print("ARP_HANDLER(): src ip: %s and dst ip: %s in same network." % (arp_src_ip, arp_dst_ip))
-      # act_like_switch(rt_object, dpid, packet, packet_in)
       if(packet.dst == rt_object.routing_table[dpid][get_subnet(rt_object, dpid, arp_dst_ip)]["mac_interface"]):
         generate_arp_reply(rt_object, dpid, packet, packet_in)
 
   # if this is an arp reply    
   elif packet.next.opcode == arp.REPLY:
-    # print("ARP_HANDLER(): Received ARP reply... learn source MAC Addr and release ip buffer.")
     # Learn source MAC addr of sender (next hop)
     rt_object.ip_to_mac[dpid][str(packet.payload.protosrc)] = str(packet.next.hwsrc)
     # release buffer
@@ -212,9 +202,6 @@ def generate_icmp_reply(rt_object, dpid, packet, icmp_type):
   msg.in_port = rt_object.ip_to_port[dpid][str(packet.next.srcip)]
   rt_object.connections[dpid].send(msg)
 
-  # DEBUG
-  # print('GENERATE_ICMP_REPLY(): Replying to IP %s with ICMP_CODE %d from PORT %d and MAC %s.' % (str(packet.next.srcip), icmp_type, msg.in_port, str(eth_packet.src)))
-
 ########################################## IPV4 functions ##########################################
 def ip_flow_mod(rt_object, dpid, packet, dest_ip):
   """
@@ -232,8 +219,6 @@ def ip_flow_mod(rt_object, dpid, packet, dest_ip):
   msg.actions.append( of.ofp_action_output(port = rt_object.ip_to_port[dpid][str(dest_ip)]))
   rt_object.connections[dpid].send(msg)
 
-  # DEBUG
-  # print("IP_FLOW_MOD(): Learning IP %s corresponds to MAC %s on PORT %d." % (str(dest_ip), str(rt_object.ip_to_mac[dpid][str(dest_ip)]), rt_object.ip_to_port[dpid][str(dest_ip)]))
 
 def send_ip_packet(rt_object, dpid, buf_id, inport, dstip):
   """
@@ -244,14 +229,9 @@ def send_ip_packet(rt_object, dpid, buf_id, inport, dstip):
   @param:   dstip - destination ip
   """
   msg = of.ofp_packet_out(buffer_id=buf_id, in_port=inport)
-  print("MAC destination=  "+str(rt_object.ip_to_mac[dpid][str(dstip)]))
-  print("Port number= "+ str(rt_object.ip_to_port[dpid][str(dstip)]))
   msg.actions.append(of.ofp_action_dl_addr.set_dst(EthAddr(rt_object.ip_to_mac[dpid][str(dstip)])))
   msg.actions.append(of.ofp_action_output(port = rt_object.ip_to_port[dpid][str(dstip)]))
   rt_object.connections[dpid].send(msg)
-
-  # DEBUG
-#   print("SEND_IP_PACKET(): Sending BUFFER_ID %d from IN_PORT %d to IP %s at MAC %s on OUT_PORT %d." % (buf_id, inport, str(dstip), str(rt_object.ip_to_mac[dpid][dstip]), rt_object.ip_to_port[dpid][dstip]))
 
 def release_buffer(rt_object, dpid, dstip):
   """
@@ -262,7 +242,6 @@ def release_buffer(rt_object, dpid, dstip):
   while (len(rt_object.buffer[dpid][str(dstip)]) > 0):
     send_ip_packet(rt_object, dpid, rt_object.buffer[dpid][str(dstip)][0]["buffer_id"], rt_object.buffer[dpid][str(dstip)][0]["port"], dstip)
     del rt_object.buffer[dpid][str(dstip)][0]
-    # print("RELEASE_BUFFER(): buffer[%s] = %s" % (dstip, rt_object.buffer[dpid][str(dstip)]))
 
 def ipv4_handler(rt_object, dpid, packet, packet_in):
   """
@@ -273,11 +252,6 @@ def ipv4_handler(rt_object, dpid, packet, packet_in):
   """
   # learn route
   rt_object.ip_to_port[dpid][str(packet.next.srcip)] = packet_in.in_port
-
-  # print("IPV4_HANDLER(): DPID = " + dpid)
-  # print("IPV4_HANDLER(): packet.srcip = " + str(packet.next.srcip))
-  # print("IPV4_HANDLER(): packet.dstip = " + str(packet.next.dstip))
-  # print("IPV4_HANDLER(): packet.payload = " + str(packet.next.payload))
 
   # if destination ip is valid (in routing table or one of routers)
   # if ip_in_table(rt_object, packet, packet_in): # FIX THIS!!!
@@ -316,7 +290,6 @@ def ipv4_handler(rt_object, dpid, packet, packet_in):
  
       # we've already received the arp reply, so forward to known destination
       else:
-        # print("IPV4_HANDLER(): Sending packet %s out PORT %d" % (str(packet.payload), rt_object.ip_to_port[dpid][str(destination_ip)]))
         send_ip_packet(rt_object, dpid, packet_in.buffer_id, packet_in.in_port, destination_ip)
 
         # flow mod
