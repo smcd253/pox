@@ -53,8 +53,11 @@ def switch_handler(sw_object, dpid, packet, packet_in):
   if type(dst_mac) is not EthAddr:
     src_mac = EthAddr(dst_mac)
   dst_mac_str = str(dst_mac)
+
+  # learn mac to port mapping
   if src_mac_str not in sw_object.mac_to_port[dpid]:
     sw_object.mac_to_port[dpid][src_mac_str] = packet_in.in_port
+
   # if the port associated with the destination MAC of the packet is known:
   if dst_mac_str in sw_object.mac_to_port[dpid]:
     # Send packet out the associated port
@@ -69,6 +72,5 @@ def switch_handler(sw_object, dpid, packet, packet_in):
     msg.actions.append(of.ofp_action_output(port = sw_object.mac_to_port[dpid][dst_mac_str]))
     sw_object.connections[dpid].send(msg)
   else:
-    # Flood the packet out everything but the input port
-    # This part looks familiar, right?
+    # broadcase packet out of all ports except in_port
     sw_object.resend_packet(dpid, packet_in, of.OFPP_ALL)
