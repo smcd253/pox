@@ -46,9 +46,6 @@ class Tutorial (object):
     connection.addListeners(self)
     self.dpid = dpid_to_str(connection.dpid)
     
-    # DEBUG
-    print("*************** CONTROLLER INIT() dpid = " + self.dpid + " *************** ")
-    
     """
     [555 Comments]
     In scenario 2, there is only one router. So, classify it as a router and initialize all the data structures you need for
