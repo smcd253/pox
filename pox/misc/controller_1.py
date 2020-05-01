@@ -25,9 +25,7 @@ from pox.lib.addresses import *
 from pox.lib.packet.icmp import *
 from pox.lib.packet.ipv4 import *
 from pox.lib.util import dpid_to_str
-# from switch import *
-from switch_old import *
-# from router import *
+from switch import *
 
 log = core.getLogger()
 
