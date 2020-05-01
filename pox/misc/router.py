@@ -240,10 +240,11 @@ def ip_flow_mod(rt_object, dpid, packet, dest_ip):
   @param:   packet - ethernet packet (in this case, packet.next = arp packet)
   """
   msg = of.ofp_flow_mod()
-  msg.idle_timeout = 3600
-  msg.hard_timeout = 7200
+  # msg.idle_timeout = 3600
+  # msg.hard_timeout = 7200
   msg.priority = 1000 # set priority to highest
   msg.match.dl_type = 0x800 # type: ip
+  msg.match.nw_src = packet.next.srcip
   msg.match.nw_dst = packet.next.dstip
   msg.actions.append( of.ofp_action_dl_addr.set_dst(EthAddr(rt_object.ip_to_mac[dpid][str(dest_ip)])))
   msg.actions.append( of.ofp_action_output(port = rt_object.ip_to_port[dpid][str(dest_ip)]))
@@ -278,6 +279,7 @@ def release_buffer(rt_object, dpid, dstip):
   """
   while (len(rt_object.buffer[dpid][str(dstip)]) > 0):
     send_ip_packet(rt_object, dpid, rt_object.buffer[dpid][str(dstip)][0]["buffer_id"], rt_object.buffer[dpid][str(dstip)][0]["port"], dstip)
+    
     del rt_object.buffer[dpid][str(dstip)][0]
  
   # DEBUG
