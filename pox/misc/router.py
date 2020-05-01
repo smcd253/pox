@@ -225,7 +225,7 @@ def generate_icmp_reply(rt_object, dpid, packet, icmp_type):
   msg = of.ofp_packet_out()
   msg.actions.append(of.ofp_action_output(port = of.OFPP_IN_PORT))
   msg.data = eth_packet.pack()
-  msg.in_port = rt_object.ip_to_port[dpid][packet.next.srcip]
+  msg.in_port = rt_object.ip_to_port[dpid][str(packet.next.srcip)]
   rt_object.connections[dpid].send(msg)
 
   # DEBUG
